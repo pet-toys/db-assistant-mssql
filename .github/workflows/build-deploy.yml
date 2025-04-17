@@ -1,0 +1,117 @@
+name: build-deplpy
+
+on:
+  release:
+    types:
+    - published
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  ProjectsToPack: "src/**/*.csproj"
+  PackagesSubfolder: "nuget"
+  ArtifactName: packages
+  GitHubPackageSource: "https://nuget.pkg.github.com/pet-toys/index.json"
+  NuGetOrgPackageSource: "https://api.nuget.org/v3/index.json"
+  DevRepositoryUrl: "https://github.com/pet-toys/db-assistant-mssql/pkgs/nuget/PetToys.DbAssistant.Mssql"
+  ProdRepositoryUrl: "https://www.nuget.org/packages/PetToys.DbAssistant.Mssql"
+
+jobs:
+  test:
+    name: test
+    uses: pet-toys/db-assistant-mssql/.github/workflows/test.yml@dev
+ 
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: |
+      startsWith(github.event.release.tag_name, 'v')
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Version
+      run: echo "PACKAGE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -c 2-)" >> $GITHUB_ENV
+
+    - name: Release notes
+      run: echo "${{ github.event.release.body }}" > assets/RELEASE-NOTES.txt
+
+    - name: Restore
+      run: dotnet restore ${{ env.ProjectsToPack }}
+
+    - name: Build
+      run: dotnet build ${{ env.ProjectsToPack }} --configuration Release --no-restore -p:Version=${{ env.PACKAGE_VERSION }}
+
+    - name: Pack
+      run: dotnet pack ${{ env.ProjectsToPack }} --configuration Release  --no-build --include-symbols --output ${{ github.workspace }}/${{ env.PackagesSubfolder }} -p:PackageVersion=${{ env.PACKAGE_VERSION }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ArtifactName }}
+        if-no-files-found: error
+        path: |
+          ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.nupkg
+          ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.snupkg
+          NuGet.Config
+          global.json
+
+  deploy-github:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: 
+      name: development
+      url: ${{ env.DevRepositoryUrl }}
+    if: |
+      github.event.repository.fork == false &&
+      github.event.release.prerelease == true
+    permissions:
+      packages: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.ArtifactName }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Push to github
+      working-directory: ${{ env.PackagesSubfolder }}
+      run: |
+        dotnet nuget push "*.nupkg" -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.GitHubPackageSource }} --skip-duplicate
+ 
+  deploy-nuget:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: ${{ env.ProdRepositoryUrl }}
+    if: |
+      github.event.repository.fork == false &&
+      github.event.release.prerelease == false
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.ArtifactName }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+
+    - name: Push to nuget.org
+      working-directory: ${{ env.PackagesSubfolder }}
+      run: |
+        dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NuGetOrgPackageSource }} --skip-duplicate
