@@ -49,6 +49,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0DF932CA-0420-4599-9739-7F091E7D5A2A}"
+	ProjectSection(SolutionItems) = preProject
+		src\ObjectReader.cs = src\ObjectReader.cs
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{9FFB5FE0-B1CA-4827-9925-B41746D794E5}"
 	ProjectSection(SolutionItems) = preProject

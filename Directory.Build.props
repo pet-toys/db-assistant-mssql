@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <TargetFrameworkVersions>net8.0;net9.0</TargetFrameworkVersions>
     <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -26,7 +27,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/pet-toys/db-assistant-mssql.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/pet-toys/db-assistant-mssql</PackageProjectUrl>
-    <PackageTags>sqlsetver;sql;bulk;performance</PackageTags>
+    <PackageTags>sql;mssql;bulk;insert;copy;performance</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

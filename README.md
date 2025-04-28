@@ -1,4 +1,4 @@
-# Database Assistant (Mssql)
+## Database Assistant (Mssql)
 
 [![Unit Test][test-badge]][test-url] [![NuGet Version][nuget-v-badge]][nuget-url] [![NuGet Downloads][nuget-dt-badge]][nuget-url]
 
@@ -6,29 +6,48 @@
 
 ***DbAssistant.Mssql*** is the open source .net library with nice wrappers for SqlConnection.
 
-#### Key features:
+### Key features:
 
-<!--- High-performance insertion of large data into a table (`COPY table(column definitions) FROM STDIN BINARY;` feature)-->
-- Accepts `IEnumerable<TEntity>` and `IAsyncEnumerable<TEntity>`
-- Supports mapping of entity properties to table columns (e.g. `MapJson`, `MapMoney`, `MapTimeStamp`, etc.)
+- Accepts `IEnumerable<TEntity>`
+- Supports mapping of entity properties to table columns
+- Supports nullable value type properties
+- Supports reference types with nullable context. If the entity class does not have a nullable context, use an extra parameter in the converter.
+- Supports following property types:
+  - `bool`
+  - `char`
+  - `string`
+  - `byte`
+  - `short`
+  - `int`
+  - `long`
+  - `float`
+  - `double`
+  - `decimal`
+  - `DateTime`
+  - `Guid`
+  - `byte[]`
+  - `char[]`
 - For better performance, it is recommended to insert data into a temporary table that has no indexes or keys. After that, you can copy data from the temporary table to the target table.
 
-#### Usage
+### Usage
 ```csharp
 using PetToys.DbAssistant.Mssql;
 
 await using var connection = new SqlConnection(connectionString);
-var result = await connection.CreateBulkContext<BusinessEntity>("table_name")
-            .MapJson("column_json", entity => entity.Data)
-            .MapMoney("column_money", entity => entity.Money)
-            /* ... */
-            .InsertAsync(entities);
+var result = await connection.CreateBulkContext<Entity>(tableName)
+            .MapProperty(e => e.Int0)
+            .MapProperty(e => e.Int1, "alias")
+            .MapProperty(e => e.Date0)
+            .MapProperty(e => e.Date1)
+            .MapProperty(e => e.Str0)
+            .MapProperty(e => e.Str1, referenceNullable: true)
+            .MapProperty(e => e.Arr0)
+            .MapProperty(e => e.Arr1)
+            .WriteDataAsync(data, options =>
+            {
+                options.BulkCopyTimeout = 30;
+            })
 ```
-
-<!--#### Roadmap:
-- High-performance binary import/export between table and stream (coming soon)
-- CSV import/export (may be)
-- There may be something else-->
 
 This package is created for my own needs.
 Requests for additional functionality and pull requests are welcome.
