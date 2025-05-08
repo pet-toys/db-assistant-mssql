@@ -13,6 +13,7 @@ namespace PetToys.DbAssistant.Mssql.Test;
 public sealed class BulkInsertTest(ITestOutputHelper output) : DatabaseTestBase
 {
     private const int BatchSize = 1_000;
+
     private static readonly Faker<NullableEnabledEntity> FakeNullable = new Faker<NullableEnabledEntity>()
         .StrictMode(true)
         .RuleFor(e => e.Int0, f => f.Random.Int())

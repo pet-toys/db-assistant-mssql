@@ -13,6 +13,7 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
 {
     private readonly ImmutableList<IPropertyAccessor<TEntity>> _accessors;
     private readonly ImmutableDictionary<string, int> _namedIndexes;
+
     private readonly DataTable _schemaTable = new()
     {
         Columns =

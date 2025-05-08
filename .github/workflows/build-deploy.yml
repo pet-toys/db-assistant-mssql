@@ -19,7 +19,7 @@ env:
 jobs:
   test:
     name: test
-    uses: pet-toys/db-assistant-mssql/.github/workflows/test.yml@dev
+    uses: ./.github/workflows/test.yml
  
   build:
     needs: test

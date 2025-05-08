@@ -1,11 +1,16 @@
 is_global = true
+# VERSION 1.1
 
 dotnet_separate_import_directive_groups = false
 dotnet_sort_system_directives_first = true
 dotnet_style_prefer_collection_expression = when_types_exactly_match
+csharp_style_prefer_primary_constructors = true
+csharp_space_after_keywords_in_control_flow_statements = true
 
 roslynator_blank_line_between_using_directives = never
 roslynator_trailing_comma_style = omit_when_single_line
+roslynator_blank_line_between_closing_brace_and_switch_section = false
+
 
 # CA1848: Use the LoggerMessage delegates
 dotnet_diagnostic.CA1848.severity = suggestion
@@ -30,6 +35,9 @@ dotnet_style_prefer_conditional_expression_over_assignment = false
 # IDE0046: Convert to conditional expression
 dotnet_style_prefer_conditional_expression_over_return = false
 
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = warning
+
 # IDE0076: Remove invalid global 'SuppressMessageAttribute'
 dotnet_diagnostic.IDE0076.severity = warning
 
@@ -45,6 +53,9 @@ dotnet_diagnostic.IDE0130.severity = warning
 # IDE0161: Use file-scoped namespace
 dotnet_diagnostic.IDE0161.severity = warning
 
+# IDE0290: Use primary constructor
+dotnet_diagnostic.IDE0290.severity = warning
+
 # IDE0305: Simplify collection initialization
 dotnet_diagnostic.IDE0305.severity = none
 
@@ -53,6 +64,9 @@ dotnet_diagnostic.rcs0003.severity = warning
 
 # Add blank line between closing brace and next statement
 dotnet_diagnostic.rcs0008.severity = warning
+
+# Add blank line between declarations
+dotnet_diagnostic.rcs0010.severity = warning
 
 # Add/remove blank line between using directives
 dotnet_diagnostic.rcs0015.severity = warning
@@ -68,6 +82,10 @@ roslynator_blank_line_after_file_scoped_namespace_declaration = true
 
 # Normalize whitespace at the beginning of a file
 dotnet_diagnostic.rcs0057.severity = warning
+
+# Add/remove blank line between closing brace and switch section
+dotnet_diagnostic.rcs0063.severity = warning
+dotnet_diagnostic.rcs1036.severity = none
 
 # Declare each type in separate file
 dotnet_diagnostic.rcs1060.severity = warning
