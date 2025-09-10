@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿using AwesomeAssertions;
 using PetToys.DbAssistant.Mssql.Extensions;
 using Xunit;
 

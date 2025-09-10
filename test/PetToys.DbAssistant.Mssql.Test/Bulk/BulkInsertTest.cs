@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Bogus;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Data.SqlClient;
 using PetToys.DbAssistant.Mssql.Extensions;
 using PetToys.DbAssistant.Mssql.Test.Accessors;

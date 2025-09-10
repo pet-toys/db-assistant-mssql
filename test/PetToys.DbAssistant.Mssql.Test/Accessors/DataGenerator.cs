@@ -20,7 +20,7 @@ public sealed class DataGenerator
             typeof(int),
             false,
             new NullableEnabledEntity { Int0 = 1 },
-            1
+            1,
         ];
 
         yield return
@@ -32,7 +32,7 @@ public sealed class DataGenerator
             typeof(int),
             false,
             new NullableEnabledEntity { Int0 = 1 },
-            1
+            1,
         ];
 
         // Int1
@@ -45,7 +45,7 @@ public sealed class DataGenerator
             typeof(int),
             true,
             new NullableEnabledEntity { Int1 = 1 },
-            1
+            1,
         ];
 
         yield return
@@ -57,7 +57,7 @@ public sealed class DataGenerator
             typeof(int),
             true,
             new NullableEnabledEntity { Int1 = 1 },
-            1
+            1,
         ];
 
         //Str0
@@ -70,7 +70,7 @@ public sealed class DataGenerator
             typeof(string),
             false,
             new NullableEnabledEntity { Str0 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
 
         yield return
@@ -82,7 +82,7 @@ public sealed class DataGenerator
             typeof(string),
             false,
             new NullableEnabledEntity { Str0 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
 
         //Str1
@@ -95,7 +95,7 @@ public sealed class DataGenerator
             typeof(string),
             true,
             new NullableEnabledEntity { Str1 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
 
         yield return
@@ -107,7 +107,7 @@ public sealed class DataGenerator
             typeof(string),
             true,
             new NullableEnabledEntity { Str1 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
     }
 
@@ -123,7 +123,7 @@ public sealed class DataGenerator
             typeof(int),
             false,
             new NullableDisabledEntity { Int0 = 1 },
-            1
+            1,
         ];
 
         yield return
@@ -135,7 +135,7 @@ public sealed class DataGenerator
             typeof(int),
             false,
             new NullableDisabledEntity { Int0 = 1 },
-            1
+            1,
         ];
 
         // Int1
@@ -148,7 +148,7 @@ public sealed class DataGenerator
             typeof(int),
             true,
             new NullableDisabledEntity { Int1 = 1 },
-            1
+            1,
         ];
 
         yield return
@@ -160,7 +160,7 @@ public sealed class DataGenerator
             typeof(int),
             true,
             new NullableDisabledEntity { Int1 = 1 },
-            1
+            1,
         ];
 
         //Str0
@@ -173,7 +173,7 @@ public sealed class DataGenerator
             typeof(string),
             true,
             new NullableDisabledEntity { Str0 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
 
         yield return
@@ -185,7 +185,7 @@ public sealed class DataGenerator
             typeof(string),
             false,
             new NullableDisabledEntity { Str0 = string.Empty },
-            string.Empty
+            string.Empty,
         ];
 
         //Str1
@@ -198,7 +198,7 @@ public sealed class DataGenerator
             typeof(string),
             true,
             new NullableDisabledEntity { Str1 = null },
-            null!
+            null!,
         ];
 
         yield return

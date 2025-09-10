@@ -1,5 +1,5 @@
 is_global = true
-# VERSION 1.1
+# VERSION 1.2
 
 dotnet_separate_import_directive_groups = false
 dotnet_sort_system_directives_first = true
@@ -34,6 +34,9 @@ dotnet_style_prefer_conditional_expression_over_assignment = false
 
 # IDE0046: Convert to conditional expression
 dotnet_style_prefer_conditional_expression_over_return = false
+
+# IDE0051: Remove unnecessary using directives
+dotnet_diagnostic.IDE0005.severity = warning
 
 # IDE0055: Fix formatting
 dotnet_diagnostic.IDE0055.severity = warning

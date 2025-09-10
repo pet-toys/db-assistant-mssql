@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <RoslinatorVersion>[4.13.1,)</RoslinatorVersion>
+    <RoslinatorVersion>[4.14.0,)</RoslinatorVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="[5.2.2,)" />

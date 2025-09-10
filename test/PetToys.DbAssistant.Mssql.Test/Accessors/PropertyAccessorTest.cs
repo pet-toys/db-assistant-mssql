@@ -1,5 +1,5 @@
 ﻿using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using PetToys.DbAssistant.Mssql.Accessors;
 using Xunit;
 
