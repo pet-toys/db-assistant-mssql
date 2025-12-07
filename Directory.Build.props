@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFrameworkVersions>net8.0;net9.0</TargetFrameworkVersions>
-    <LangVersion>12.0</LangVersion>
+    <TargetFrameworkVersions>net8.0;net9.0;net10.0</TargetFrameworkVersions>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AnalysisLevel>9.0-Recommended</AnalysisLevel>
+    <AnalysisLevel>10.0-Recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>

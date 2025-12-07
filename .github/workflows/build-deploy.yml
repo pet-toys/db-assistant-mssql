@@ -23,7 +23,7 @@ jobs:
  
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: |
       startsWith(github.event.release.tag_name, 'v')
 
@@ -64,7 +64,7 @@ jobs:
 
   deploy-github:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: 
       name: development
       url: ${{ env.DevRepositoryUrl }}
@@ -92,7 +92,7 @@ jobs:
  
   deploy-nuget:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: 
       name: production
       url: ${{ env.ProdRepositoryUrl }}

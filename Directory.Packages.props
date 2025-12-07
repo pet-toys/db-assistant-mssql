@@ -1,10 +1,15 @@
 <Project>
   <PropertyGroup>
+    <FrameworkVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.0,9.0.0)</FrameworkVersion>
+    <FrameworkVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.0,10.0.0)</FrameworkVersion>
+    <FrameworkVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.0,11.0.0)</FrameworkVersion>
+    <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.5,11.0.0)</FrameworkExtVersion>
+    <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.0,11.0.0)</FrameworkExtVersion>
+    <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.0,11.0.0)</FrameworkExtVersion>
     <RoslinatorVersion>[4.14.1,)</RoslinatorVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="[5.2.2,)" />
-    <PackageVersion Include="System.Text.Json" Version="[8.0.5,)" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="[6.0.1,)" />
   </ItemGroup>
   <ItemGroup>
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="[8.0.0,)" />

@@ -10,7 +10,6 @@ using Xunit;
 
 namespace PetToys.DbAssistant.Mssql.Test.Bulk;
 
-[Trait("Category", "Integration")]
 public sealed class BulkInsertTest(MsSqlFixture fixture, ITestOutputHelper output) : IClassFixture<MsSqlFixture>
 {
     private const int BatchSize = 1_000_000;
@@ -37,8 +36,7 @@ public sealed class BulkInsertTest(MsSqlFixture fixture, ITestOutputHelper outpu
         .RuleFor(e => e.Arr0, f => f.Random.Bytes(f.Random.Number(500)))
         .RuleFor(e => e.Arr1, f => f.Random.Bytes(f.Random.Number(500)).OrNull(f, .1f));
 
-    [Fact]
-    [Trait("DockerPlatform", "Linux")]
+    [LinuxOnlyFact]
     public async Task NullableEnabled_Test()
     {
         var data = FakeNullable.Generate(BatchSize);
@@ -63,8 +61,7 @@ public sealed class BulkInsertTest(MsSqlFixture fixture, ITestOutputHelper outpu
         await connection.CloseAsync();
     }
 
-    [Fact]
-    [Trait("DockerPlatform", "Linux")]
+    [LinuxOnlyFact]
     public async Task NotNullableEnabled_Test()
     {
         var data = FakeNotNullable.Generate(BatchSize);
