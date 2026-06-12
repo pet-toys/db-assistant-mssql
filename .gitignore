@@ -398,3 +398,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local tooling artifacts
+/openspec/
+/CLAUDE.md
+/AGENTS.md
+/.claude/
+
