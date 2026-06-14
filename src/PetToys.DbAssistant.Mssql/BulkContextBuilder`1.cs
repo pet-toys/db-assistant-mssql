@@ -23,6 +23,8 @@ public sealed class BulkContextBuilder<TEntity>
 
     internal BulkContextBuilder(SqlConnection connection, string tableName)
     {
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
         _connection = connection;
         _tableName = tableName;
     }
@@ -60,6 +62,7 @@ public sealed class BulkContextBuilder<TEntity>
         SqlTransaction? transaction = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(entities);
         var closeConnectionAfter = _connection.State == ConnectionState.Closed;
         var options = new SqlBulkOptions();
         optionsBuilder?.Invoke(options);
