@@ -1,39 +1,74 @@
-# How to Contribute:
+# Contributing
 
-You can contribute to the project by:
-- Report issues and bugs [here](https://github.com/pet-toys/db-assistant-mssql/issues/new?template=bug_report.md).
-- Submit feature requests [here](https://github.com/pet-toys/db-assistant-mssql/issues/new?template=feature_request.md).
-- Creating a pull request.
+Thanks for taking the time to contribute! This project is a small, focused
+SQL Server bulk-copy helper, so contributions of any size are welcome.
 
-## Code Style
+## Ways to contribute
 
-1. DO use `PascalCase`:
-- class names
-- method names
-- const names
+- [Report a bug](https://github.com/pet-toys/db-assistant-mssql/issues/new?template=bug_report.yml).
+- [Request a feature](https://github.com/pet-toys/db-assistant-mssql/issues/new?template=feature_request.yml).
+- Improve the documentation.
+- Open a pull request against the `dev` branch.
 
-2. DO use `camelCase`:
-- method arguments
-- local variables
-- private fields
+For anything beyond a small fix, please open an issue first so the approach can
+be discussed before you invest time in a pull request.
 
-4. DO NOT use Hungarian notation.
+## Getting started
 
-5. DO NOT use underscores, hyphens, or any other non-alphanumeric characters (underscores are allowed in private field and unit test names).
+The repository uses the .NET SDK version pinned in [`global.json`](../global.json)
+and multi-targets `net8.0`, `net9.0`, and `net10.0`.
 
-6. DO NOT use Caps for any names.
+```bash
+git clone https://github.com/pet-toys/db-assistant-mssql.git
+cd db-assistant-mssql
 
-7. DO use predefined type names like `int`, `string` etc. instead of `Int32`, `String`.
+dotnet restore
+dotnet build -c Release
+dotnet test
+```
 
-8. DO use `_` prefix for private field names.
+`Release` builds treat warnings as errors and enforce code-style and analyzer
+rules, so build with `-c Release` before opening a pull request to catch the
+same issues CI will.
 
-9. DO use the `I` prefix for Interface names.
+The integration tests spin up a real SQL Server instance with
+[Testcontainers](https://testcontainers.com/), so a running Docker engine is
+required to execute them; they are skipped automatically when Docker is not
+available. The remaining unit tests need no external dependencies.
 
-10. DO vertically align curly brackets.
+## Pull requests
 
-11. DO NOT use `Enum` or `Flag(s)` suffix for Enum names.
+- Branch off `dev` and target `dev`.
+- Keep each pull request focused on a single change.
+- Link the related issue (for example, `Closes #123`).
+- Add or update tests for any behavioral change.
+- Make sure `dotnet build -c Release` and `dotnet test` both pass locally.
 
-12. DO use prefix `Is`, `Has`, `Have`, `Any`, `Can` or similar keywords for Boolean names.
+Commit messages and pull request descriptions should be written in English and
+describe the change in plain, neutral terms.
 
-13. DO use curly brackets for single line `if`, `for` and `foreach` statements.
+## Code style
 
+Most conventions are enforced automatically by the analyzers and
+`.editorconfig`, so a clean `Release` build is the source of truth. The
+guidelines below capture the conventions that are not fully machine-checked:
+
+- Use `PascalCase` for type, method, property, and constant names.
+- Use `camelCase` for parameters and local variables.
+- Prefix private fields with an underscore (`_field`).
+- Prefix interfaces with `I`.
+- Use language keywords (`int`, `string`) rather than framework type names
+  (`Int32`, `String`).
+- Use boolean-style prefixes (`Is`, `Has`, `Can`, `Any`) for boolean members.
+- Always use braces, even for single-statement `if`, `for`, and `foreach`.
+- Do not use Hungarian notation.
+
+Nullable reference types are enabled project-wide, so do not add `#nullable`
+directives to individual files.
+
+### Tests
+
+Tests use xUnit and follow the `Method_State_ExpectedResult` naming pattern
+(for example, `WriteDataAsync_NullEntities_ThrowsForEntities`). Keep test data
+close to the tests that use it, and prefer deterministic tests over ones that
+depend on timing.

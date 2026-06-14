@@ -1,0 +1,12 @@
+10.1.0
+======
+
+Fixed:
+- Identifier quoting now escapes embedded closing brackets, so table and column
+  names that contain ']' are quoted correctly.
+
+Changed:
+- CreateBulkContext now validates its arguments: it throws ArgumentNullException
+  for a null connection and ArgumentException for a null or whitespace table
+  name. WriteDataAsync throws ArgumentNullException when the entity collection is
+  null.

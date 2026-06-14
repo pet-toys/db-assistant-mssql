@@ -1,0 +1,56 @@
+name: Bug report
+description: Report incorrect or unexpected behavior in the library.
+title: "[Bug]: "
+labels: ["bug"]
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill out the
+        sections below so the issue can be reproduced and triaged quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: >-
+        A minimal code sample showing the entity, how the bulk context is
+        configured and mapped, and how WriteDataAsync is called. Include the
+        relevant table schema if it matters.
+      render: csharp
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: Which version of PetToys.DbAssistant.Mssql are you using?
+      placeholder: "10.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: target-framework
+    attributes:
+      label: Target framework
+      description: Which target framework does the affected project use?
+      options:
+        - net8.0
+        - net9.0
+        - net10.0
+        - Other (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help — logs, environment details, screenshots.
+    validations:
+      required: false
