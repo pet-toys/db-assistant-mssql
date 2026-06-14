@@ -6,22 +6,26 @@ using Xunit;
 namespace PetToys.DbAssistant.Mssql.Test;
 
 /// <summary>
-/// A <see cref="FactAttribute"/> that skips the test when a Docker engine is not
-/// reachable, instead of proxying on the operating system. The probe runs once
-/// per test session and is cached.
+/// A <see cref="FactAttribute"/> that skips the test unless a Docker engine
+/// capable of running Linux containers is reachable. This gates on the real
+/// capability the tests need (the SQL Server image is Linux-only) rather than on
+/// the host operating system, so it runs on Linux and on a Windows host whose
+/// Docker daemon is in Linux-container mode, and skips where Linux containers are
+/// unavailable (a Windows-container daemon, or no daemon at all). The probe runs
+/// once per test session and is cached.
 /// </summary>
 public sealed class DockerRequiredFactAttribute : FactAttribute
 {
-    private static readonly Lazy<bool> DockerAvailable = new(ProbeDocker);
+    private static readonly Lazy<bool> LinuxDockerAvailable = new(ProbeDocker);
 
     public DockerRequiredFactAttribute(
         [CallerFilePath] string? sourceFilePath = null,
         [CallerLineNumber] int sourceLineNumber = -1)
         : base(sourceFilePath, sourceLineNumber)
     {
-        if (!DockerAvailable.Value)
+        if (!LinuxDockerAvailable.Value)
         {
-            Skip = "Docker engine is not available on this host.";
+            Skip = "A Linux-container Docker engine is not available on this host.";
         }
     }
 
@@ -29,7 +33,7 @@ public sealed class DockerRequiredFactAttribute : FactAttribute
     {
         try
         {
-            using var process = Process.Start(new ProcessStartInfo("docker", "info")
+            using var process = Process.Start(new ProcessStartInfo("docker", "info --format {{.OSType}}")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -44,7 +48,9 @@ public sealed class DockerRequiredFactAttribute : FactAttribute
                 return false;
             }
 
-            return process.ExitCode == 0;
+            var osType = process.StandardOutput.ReadToEnd().Trim();
+            return process.ExitCode == 0
+                && osType.Equals("linux", StringComparison.OrdinalIgnoreCase);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
