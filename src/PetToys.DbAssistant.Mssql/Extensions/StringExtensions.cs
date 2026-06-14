@@ -9,6 +9,6 @@ internal static class StringExtensions
     {
         { Length: 0 } => value,
         _ when value.StartsWith(QuoteStartChar) && value.EndsWith(QuoteEndChar) => value,
-        _ => QuoteStartChar + value + QuoteEndChar,
+        _ => QuoteStartChar + value.Replace($"{QuoteEndChar}", $"{QuoteEndChar}{QuoteEndChar}") + QuoteEndChar,
     };
 }
