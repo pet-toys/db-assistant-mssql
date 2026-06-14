@@ -19,13 +19,33 @@
     <None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="/" />
   </ItemGroup>
 
-  <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
-    <ReadLinesFromFile File="..\..\assets\RELEASE-NOTES.txt">
-      <Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
-    </ReadLinesFromFile>
+  <PropertyGroup>
+    <ReleaseNotesFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'assets', 'RELEASE-NOTES.txt'))</ReleaseNotesFile>
+    <!-- RELEASE-NOTES.txt is a cumulative changelog, newest version on top,
+         versions separated by a line of 3+ hyphens. Publish only the top
+         section. Read verbatim (not ReadLinesFromFile, which drops blank lines
+         and strips the indentation of wrapped bullets). -->
+    <ReleaseNotesSeparatorPattern>(?s)\A.*?(?=\r?\n[ \t]*-{3,}[ \t]*\r?\n|\z)</ReleaseNotesSeparatorPattern>
+    <!-- Leading version header (version line + '=' underline + blank lines).
+         Stripped from the published notes; it lives only in RELEASE-NOTES.txt
+         (NuGet and the GitHub release already show the version). -->
+    <ReleaseNotesHeaderPattern>\A[^\r\n]*\r?\n=+[ \t]*\r?\n\s*</ReleaseNotesHeaderPattern>
+  </PropertyGroup>
+
+  <Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec"
+          Condition="Exists('$(ReleaseNotesFile)')">
     <PropertyGroup>
-      <PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+      <_ReleaseNotesTopSection>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(ReleaseNotesFile)')), '$(ReleaseNotesSeparatorPattern)').Value)</_ReleaseNotesTopSection>
+      <PackageReleaseNotes>$([System.Text.RegularExpressions.Regex]::Replace($(_ReleaseNotesTopSection), '$(ReleaseNotesHeaderPattern)', '').TrimEnd())</PackageReleaseNotes>
     </PropertyGroup>
+  </Target>
+
+  <!-- CI reuses the same notes to set the GitHub release body:
+       dotnet msbuild ... -t:ExportPackageReleaseNotes -p:ReleaseNotesExportPath=<file> -->
+  <Target Name="ExportPackageReleaseNotes" DependsOnTargets="PreparePackageReleaseNotesFromFile"
+          Condition="'$(ReleaseNotesExportPath)' != ''">
+    <WriteLinesToFile File="$(ReleaseNotesExportPath)" Lines="$(PackageReleaseNotes)"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
   <ItemGroup>
