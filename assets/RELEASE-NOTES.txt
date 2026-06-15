@@ -1,3 +1,13 @@
+10.2.1
+======
+
+Fixed:
+- Bulk-write operations no longer capture the caller's synchronization context,
+  preventing a potential deadlock when the returned task is awaited or blocked on
+  from a single-threaded or UI context.
+
+----------------------------------------------------------------------
+
 10.2.0
 ======
 

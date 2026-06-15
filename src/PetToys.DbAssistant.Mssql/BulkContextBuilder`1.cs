@@ -78,7 +78,7 @@ public sealed class BulkContextBuilder<TEntity>
 
         try
         {
-            if (openedByThisCall) await _connection.OpenAsync(cancellationToken);
+            if (openedByThisCall) await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             using var copier = new SqlBulkCopy(_connection, options.CopyOptions, transaction);
             copier.DestinationTableName = _tableName;
             copier.EnableStreaming = options.EnableStreaming;
@@ -88,13 +88,16 @@ public sealed class BulkContextBuilder<TEntity>
                 copier.ColumnMappings.Add(accessor.PropertyName, accessor.ColumnName);
             }
 
-            await using var reader = new EntityAccessor<TEntity>(entities, _accessors);
-            await copier.WriteToServerAsync(reader, cancellationToken);
-            return copier.RowsCopied64;
+            var reader = new EntityAccessor<TEntity>(entities, _accessors);
+            await using (reader.ConfigureAwait(false))
+            {
+                await copier.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
+                return copier.RowsCopied64;
+            }
         }
         finally
         {
-            if (openedByThisCall) await _connection.CloseAsync();
+            if (openedByThisCall) await _connection.CloseAsync().ConfigureAwait(false);
         }
     }
 }

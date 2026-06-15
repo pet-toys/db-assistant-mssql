@@ -95,3 +95,11 @@ dotnet_diagnostic.rcs1060.severity = warning
 
 # SYSLIB1006: Multiple logging methods cannot use the same event id within a class
 dotnet_diagnostic.SYSLIB1006.severity = warning
+
+# CA2007: Consider calling ConfigureAwait on the awaited task
+# Reusable library code must not capture the caller's SynchronizationContext, so
+# every await needs ConfigureAwait(false). The rule is off by default at this
+# analysis level; raise it to a warning. Release builds promote warnings to
+# errors (TreatWarningsAsErrors), so a missing ConfigureAwait(false) fails CI.
+# The test project opts out in its GlobalSuppressions.cs.
+dotnet_diagnostic.CA2007.severity = warning
