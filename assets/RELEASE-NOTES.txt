@@ -1,3 +1,29 @@
+10.2.0
+======
+
+Added:
+- Documented the destination table name contract: the name is passed to
+  SqlBulkCopy verbatim, so the caller owns quoting and multi-part qualification
+  (for example [schema].[table]).
+
+Changed:
+- WriteDataAsync now fails fast with InvalidOperationException when no property
+  has been mapped, and opens the connection whenever it is not already open
+  (previously only a Closed connection was opened, leaving Broken/Connecting to
+  fail later).
+- Faster per-cell bulk-copy reads: the data reader now uses an array-backed
+  accessor store with a constant-time indexer.
+
+Fixed:
+- The data reader now honors the IDataReader contract: GetBytes and GetChars
+  return the field length when given a null buffer, GetOrdinal throws
+  IndexOutOfRangeException for an unknown column name, accessing a field before
+  the first read throws InvalidOperationException, HasRows reports false for an
+  empty source, and GetSchemaTable returns an independent copy whose column
+  names match GetName.
+
+----------------------------------------------------------------------
+
 10.1.0
 ======
 
