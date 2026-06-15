@@ -42,8 +42,8 @@ public sealed class BulkContextBuilder<TEntity>
     public BulkContextBuilder<TEntity> MapProperty<TProperty>(Expression<Func<TEntity, TProperty>> propertyAccessor, string? columnName = null, bool referenceNullable = true)
     {
         var accessor = new PropertyAccessor<TEntity, TProperty>(propertyAccessor, columnName, referenceNullable);
-        if (_accessors.Select(a => a.PropertyName).Contains(accessor.PropertyName)) throw new InvalidOperationException("Property '" + accessor.PropertyName + "' is already mapped.");
-        if (_accessors.Select(a => a.ColumnName).Contains(accessor.ColumnName)) throw new InvalidOperationException("Column '" + accessor.ColumnName + "' is already mapped.");
+        if (_accessors.Any(a => a.PropertyName == accessor.PropertyName)) throw new InvalidOperationException($"Property '{accessor.PropertyName}' is already mapped.");
+        if (_accessors.Any(a => a.ColumnName == accessor.ColumnName)) throw new InvalidOperationException($"Column '{accessor.ColumnName}' is already mapped.");
         _accessors.Add(accessor);
         return this;
     }
@@ -51,11 +51,19 @@ public sealed class BulkContextBuilder<TEntity>
     /// <summary>
     /// Writes data to the database using SqlBulkCopy.
     /// </summary>
+    /// <remarks>
+    /// The destination table name supplied to <c>CreateBulkContext</c> is passed to
+    /// <see cref="SqlBulkCopy.DestinationTableName"/> verbatim: the caller owns quoting and
+    /// multi-part qualification (e.g. <c>[schema].[table]</c>). This is the intentional asymmetry
+    /// with column names, which the library always quotes.
+    /// </remarks>
     /// <param name="entities">A collection of objects of type <typeparamref name="TEntity" />, intended to be saved to a database.</param>
     /// <param name="optionsBuilder">A delegate that is used to configure an <see cref="SqlBulkOptions"/>.</param>
     /// <param name="transaction">The transaction to use for this operation.</param>
     /// <param name="cancellationToken">The cancellation instruction.</param>
     /// <returns>Number of rows stored.</returns>
+    /// <exception cref="ArgumentNullException">The <paramref name="entities"/> collection is null.</exception>
+    /// <exception cref="InvalidOperationException">No property has been mapped via <see cref="MapProperty{TProperty}"/>.</exception>
     public async ValueTask<long> WriteDataAsync(
         IEnumerable<TEntity> entities,
         Action<SqlBulkOptions>? optionsBuilder = null,
@@ -63,13 +71,14 @@ public sealed class BulkContextBuilder<TEntity>
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entities);
-        var closeConnectionAfter = _connection.State == ConnectionState.Closed;
+        if (_accessors.Count == 0) throw new InvalidOperationException("At least one property must be mapped before writing.");
+        var openedByThisCall = _connection.State != ConnectionState.Open;
         var options = new SqlBulkOptions();
         optionsBuilder?.Invoke(options);
 
         try
         {
-            if (closeConnectionAfter) await _connection.OpenAsync(cancellationToken);
+            if (openedByThisCall) await _connection.OpenAsync(cancellationToken);
             using var copier = new SqlBulkCopy(_connection, options.CopyOptions, transaction);
             copier.DestinationTableName = _tableName;
             copier.EnableStreaming = options.EnableStreaming;
@@ -85,7 +94,7 @@ public sealed class BulkContextBuilder<TEntity>
         }
         finally
         {
-            if (closeConnectionAfter) await _connection.CloseAsync();
+            if (openedByThisCall) await _connection.CloseAsync();
         }
     }
 }

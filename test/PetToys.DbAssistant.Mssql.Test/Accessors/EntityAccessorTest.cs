@@ -146,11 +146,68 @@ public sealed class EntityAccessorTest
         var schema = reader.GetSchemaTable();
 
         schema.Rows.Count.Should().Be(4);
-        schema.Rows[0]["ColumnName"].Should().Be("[Int0]");
+        schema.Rows[0]["ColumnName"].Should().Be("Int0");
+        schema.Rows[0]["ColumnName"].Should().Be(reader.GetName(0));
         schema.Rows[0]["DataType"].Should().Be(typeof(int));
         schema.Rows[0]["AllowDBNull"].Should().Be(false);
-        schema.Rows[1]["ColumnName"].Should().Be("[Str1]");
+        schema.Rows[1]["ColumnName"].Should().Be("Str1");
         schema.Rows[1]["AllowDBNull"].Should().Be(true);
+    }
+
+    [Fact]
+    public void GetSchemaTable_ReturnsIndependentCopy()
+    {
+        using var reader = CreateReader();
+
+        reader.GetSchemaTable().Rows.Clear();
+
+        reader.GetSchemaTable().Rows.Count.Should().Be(4);
+    }
+
+    [Fact]
+    public void HasRows_IsFalse_ForEmptySource()
+    {
+        using var reader = CreateReader();
+
+        reader.HasRows.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Indexer_BeforeRead_ThrowsInvalidOperation()
+    {
+        using var reader = CreateReader(FullRow);
+
+        var act = () => reader[0];
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void GetOrdinal_UnknownName_ThrowsIndexOutOfRange()
+    {
+        using var reader = CreateReader();
+
+        var act = () => reader.GetOrdinal("Missing");
+
+        act.Should().Throw<IndexOutOfRangeException>();
+    }
+
+    [Fact]
+    public void GetBytes_NullBuffer_ReturnsFieldLength()
+    {
+        using var reader = CreateReader(FullRow);
+        reader.Read().Should().BeTrue();
+
+        reader.GetBytes(2, 0, null, 0, 0).Should().Be(4);
+    }
+
+    [Fact]
+    public void GetChars_NullBuffer_ReturnsFieldLength()
+    {
+        using var reader = CreateReader(FullRow);
+        reader.Read().Should().BeTrue();
+
+        reader.GetChars(1, 0, null, 0, 0).Should().Be(5);
     }
 
     [Fact]

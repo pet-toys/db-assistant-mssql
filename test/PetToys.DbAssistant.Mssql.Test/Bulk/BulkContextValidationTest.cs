@@ -45,4 +45,16 @@ public sealed class BulkContextValidationTest
         await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("entities");
         connection.State.Should().Be(ConnectionState.Closed);
     }
+
+    [Fact]
+    public async Task WriteDataAsync_NoMappedProperties_ThrowsAndLeavesConnectionClosed()
+    {
+        using var connection = new SqlConnection();
+        var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
+
+        var act = async () => await context.WriteDataAsync(Array.Empty<NullableEnabledEntity>());
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        connection.State.Should().Be(ConnectionState.Closed);
+    }
 }

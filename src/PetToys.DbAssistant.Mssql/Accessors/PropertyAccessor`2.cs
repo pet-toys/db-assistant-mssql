@@ -15,7 +15,7 @@ internal sealed class PropertyAccessor<TEntity, TProperty> : IPropertyAccessor<T
         var memberInfo = (getter.Body as MemberExpression)?.Member;
         if (memberInfo is null || memberInfo.MemberType != MemberTypes.Property)
         {
-            throw new ArgumentException("Parameter " + nameof(getter) + " is not a property expression");
+            throw new ArgumentException($"Parameter {nameof(getter)} is not a property expression.", nameof(getter));
         }
 
         ClrType = typeof(TProperty);

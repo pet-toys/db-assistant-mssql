@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -11,7 +11,7 @@ namespace PetToys.DbAssistant.Mssql.Accessors;
 internal sealed class EntityAccessor<TEntity> : DbDataReader
     where TEntity : class
 {
-    private readonly ImmutableList<IPropertyAccessor<TEntity>> _accessors;
+    private readonly ImmutableArray<IPropertyAccessor<TEntity>> _accessors;
     private readonly ImmutableDictionary<string, int> _namedIndexes;
 
     private readonly DataTable _schemaTable = new()
@@ -28,31 +28,42 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
 
     private IEnumerator<TEntity>? _source;
     private TEntity? _current;
-    private bool _canRead = true;
+    private bool _hasCurrent;
+    private TEntity? _lookahead;
+    private bool _hasLookahead;
+    private readonly bool _hasRows;
+    private bool _resultEnded;
 
     public EntityAccessor(IEnumerable<TEntity> source, List<IPropertyAccessor<TEntity>> accessors)
     {
         _source = source.GetEnumerator();
-        _accessors = ImmutableList.Create(accessors.ToArray());
+        _accessors = accessors.ToImmutableArray();
         var namedIndexes = new Dictionary<string, int>(accessors.Count);
         for (var i = 0; i < accessors.Count; i++)
         {
             namedIndexes.Add(accessors[i].PropertyName, i);
-            _schemaTable.Rows.Add(i, accessors[i].ColumnName, accessors[i].ClrType, -1, accessors[i].IsNullable);
+            _schemaTable.Rows.Add(i, accessors[i].PropertyName, accessors[i].ClrType, -1, accessors[i].IsNullable);
         }
 
         _namedIndexes = ImmutableDictionary.CreateRange(namedIndexes);
+
+        if (_source.MoveNext())
+        {
+            _lookahead = _source.Current;
+            _hasLookahead = true;
+            _hasRows = true;
+        }
     }
 
-    public override object this[int ordinal] => _accessors[ordinal].GetValue(_current!) ?? DBNull.Value;
+    public override object this[int ordinal] => _accessors[ordinal].GetValue(Current()) ?? DBNull.Value;
 
-    public override object this[string name] => _accessors[GetOrdinal(name)].GetValue(_current!) ?? DBNull.Value;
+    public override object this[string name] => _accessors[GetOrdinal(name)].GetValue(Current()) ?? DBNull.Value;
 
     public override int Depth => 0;
 
-    public override int FieldCount => _accessors.Count;
+    public override int FieldCount => _accessors.Length;
 
-    public override bool HasRows => _canRead;
+    public override bool HasRows => _hasRows && !_resultEnded;
 
     public override bool IsClosed => _source is null;
 
@@ -65,10 +76,11 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
     public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
     {
         var src = (byte[])this[ordinal];
+        if (buffer is null) return src.LongLength;
         var diff = src.LongLength - dataOffset;
         if (diff <= 0L) return 0L;
         var count = Math.Min(length, diff);
-        Buffer.BlockCopy(src, (int)dataOffset, buffer!, bufferOffset, (int)count);
+        Buffer.BlockCopy(src, (int)dataOffset, buffer, bufferOffset, (int)count);
         return count;
     }
 
@@ -77,10 +89,11 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
     public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
     {
         var str = (string)this[ordinal];
-        var diff = str.Length - (int)dataOffset;
-        if (diff <= 0) return 0;
+        if (buffer is null) return str.Length;
+        var diff = str.Length - dataOffset;
+        if (diff <= 0L) return 0L;
         var count = Math.Min(length, diff);
-        str.CopyTo((int)dataOffset, buffer!, bufferOffset, count);
+        str.CopyTo((int)dataOffset, buffer, bufferOffset, (int)count);
         return count;
     }
 
@@ -109,9 +122,17 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
 
     public override string GetName(int ordinal) => _accessors[ordinal].PropertyName;
 
-    public override int GetOrdinal(string name) => _namedIndexes[name];
+    public override int GetOrdinal(string name)
+    {
+        if (_namedIndexes.TryGetValue(name, out var ordinal)) return ordinal;
 
-    public override DataTable GetSchemaTable() => _schemaTable;
+        // The IDataReader.GetOrdinal contract mandates IndexOutOfRangeException for an unknown name.
+#pragma warning disable CA2201
+        throw new IndexOutOfRangeException(name);
+#pragma warning restore CA2201
+    }
+
+    public override DataTable GetSchemaTable() => _schemaTable.Copy();
 
     public override string GetString(int ordinal) => (string)this[ordinal];
 
@@ -132,25 +153,34 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
 
     public override bool NextResult()
     {
-        _canRead = false;
+        _resultEnded = true;
+        _hasCurrent = false;
+        _current = null;
         return false;
     }
 
     public override bool Read()
     {
-        if (_canRead)
+        if (_resultEnded || !_hasLookahead)
         {
-            if (_source?.MoveNext() == true)
-            {
-                _current = _source.Current;
-                return true;
-            }
-
-            _canRead = false;
+            _current = null;
+            _hasCurrent = false;
+            return false;
         }
 
-        _current = null;
-        return false;
+        _current = _lookahead;
+        _hasCurrent = true;
+        if (_source!.MoveNext())
+        {
+            _lookahead = _source.Current;
+        }
+        else
+        {
+            _lookahead = null;
+            _hasLookahead = false;
+        }
+
+        return true;
     }
 
     protected override void Dispose(bool disposing)
@@ -160,10 +190,15 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
         Shutdown();
     }
 
+    private TEntity Current() =>
+        _hasCurrent ? _current! : throw new InvalidOperationException("No current row; call Read first.");
+
     private void Shutdown()
     {
-        _canRead = false;
+        _hasCurrent = false;
+        _hasLookahead = false;
         _current = null;
+        _lookahead = null;
         _source?.Dispose();
         _source = null;
     }
