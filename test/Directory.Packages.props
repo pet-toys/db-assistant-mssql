@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageVersion Include="AwesomeAssertions" Version="[9.4.0,)" />
     <PackageVersion Include="Bogus" Version="[35.6.5,)" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="[18.7.0,)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestcontainersVersion)" />
     <PackageVersion Include="Testcontainers.XunitV3" Version="$(TestcontainersVersion)" />
     <PackageVersion Include="xunit.v3" Version="[3.2.2,)" />
