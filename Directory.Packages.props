@@ -9,7 +9,7 @@
     <RoslinatorVersion>[4.15.0,)</RoslinatorVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="[7.0.1,)" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="[7.0.2,)" />
   </ItemGroup>
   <ItemGroup>
     <GlobalPackageReference Include="Roslynator.Analyzers" Version="$(RoslinatorVersion)" />
