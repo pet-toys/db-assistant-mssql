@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "nuget"
+  ],
+  "timezone": "UTC",
+  "schedule": [
+    "before 3am on saturday"
+  ],
+  "semanticCommits": "disabled",
+  "commitMessagePrefix": "build:",
+  "packageRules": [
+    {
+      "description": "Keep the NuGet version-range notation used in Directory.Packages.props ([x.y.z,) stays a range instead of collapsing to a bare version).",
+      "matchManagers": [
+        "nuget"
+      ],
+      "rangeStrategy": "bump",
+      "groupName": "nuget"
+    }
+  ]
+}
