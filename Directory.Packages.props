@@ -6,16 +6,16 @@
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.5,11.0.0)</FrameworkExtVersion>
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.0,11.0.0)</FrameworkExtVersion>
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.0,11.0.0)</FrameworkExtVersion>
-    <RoslinatorVersion>[4.16.0,)</RoslinatorVersion>
+    <RoslynatorVersion>[4.16.0,)</RoslynatorVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="[7.0.2,)" />
   </ItemGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="Roslynator.Analyzers" Version="$(RoslinatorVersion)" />
-    <GlobalPackageReference Include="Roslynator.CodeAnalysis.Analyzers" Version="$(RoslinatorVersion)" />
-    <GlobalPackageReference Include="Roslynator.CodeFixes" Version="$(RoslinatorVersion)" />
-    <GlobalPackageReference Include="Roslynator.Formatting.Analyzers" Version="$(RoslinatorVersion)" />
-    <GlobalPackageReference Include="Roslynator.Refactorings" Version="$(RoslinatorVersion)" />
+    <GlobalPackageReference Include="Roslynator.Analyzers" Version="$(RoslynatorVersion)" />
+    <GlobalPackageReference Include="Roslynator.CodeAnalysis.Analyzers" Version="$(RoslynatorVersion)" />
+    <GlobalPackageReference Include="Roslynator.CodeFixes" Version="$(RoslynatorVersion)" />
+    <GlobalPackageReference Include="Roslynator.Formatting.Analyzers" Version="$(RoslynatorVersion)" />
+    <GlobalPackageReference Include="Roslynator.Refactorings" Version="$(RoslynatorVersion)" />
   </ItemGroup>
 </Project>
