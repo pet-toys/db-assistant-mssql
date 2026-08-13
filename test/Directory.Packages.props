@@ -3,11 +3,14 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
   <PropertyGroup>
     <TestcontainersVersion>[4.13.0,)</TestcontainersVersion>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AwesomeAssertions" Version="[9.4.0,)" />
+    <PackageVersion Include="AwesomeAssertions" Version="[9.5.0,)" />
     <PackageVersion Include="Bogus" Version="[35.6.5,)" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="[18.8.1,)" />
+    <!-- Transitive of Testcontainers; pinned above the vulnerable 2025.1.0 (GHSA-q939-rpr3-3284). -->
+    <PackageVersion Include="SSH.NET" Version="[2026.0.0,)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestcontainersVersion)" />
     <PackageVersion Include="Testcontainers.XunitV3" Version="$(TestcontainersVersion)" />
     <PackageVersion Include="xunit.v3" Version="[3.2.2,)" />
