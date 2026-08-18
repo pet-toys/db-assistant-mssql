@@ -117,6 +117,9 @@ jobs:
     if: |
       github.event.repository.fork == false &&
       github.event.release.prerelease == false
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
     - name: Download artifacts
@@ -129,9 +132,15 @@ jobs:
       with:
         global-json-file: global.json
 
+    - name: NuGet login
+      id: login
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
     - name: Push to nuget.org
       working-directory: ${{ env.PackagesSubfolder }}
       env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
       run: |
         dotnet nuget push "*.nupkg" -k "$NUGET_API_KEY" -s ${{ env.NuGetOrgPackageSource }} --skip-duplicate
