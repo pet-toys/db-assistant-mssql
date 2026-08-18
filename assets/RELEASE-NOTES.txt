@@ -1,3 +1,12 @@
+10.2.2
+======
+
+Changed:
+- Packages are now published to NuGet.org through trusted publishing, so the
+  release pipeline no longer depends on a long-lived API key.
+
+----------------------------------------------------------------------
+
 10.2.1
 ======
 
