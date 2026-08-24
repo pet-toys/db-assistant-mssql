@@ -2,8 +2,9 @@
 
 # Copilot instructions
 
-A small, single-purpose .NET library published as a NuGet package. `src/` holds the
-library, `test/` its test project. Pull requests target the default branch.
+A small, focused .NET repository that publishes one or more NuGet packages. Every
+package is a project under `src/`, with a matching test project under `test/`.
+Pull requests target the default branch.
 
 ## Build and test
 
@@ -14,7 +15,7 @@ library, `test/` its test project. Pull requests target the default branch.
 
 ## Conventions
 
-- The library is multi-targeted; the list of target frameworks lives in
+- The packages are multi-targeted; the list of target frameworks lives in
   `Directory.Build.props`. Code must compile on every target in that list - guard
   newer BCL APIs behind a conditional instead of dropping a target.
 - Central Package Management. Versions live in `Directory.Packages.props` and
@@ -26,9 +27,17 @@ library, `test/` its test project. Pull requests target the default branch.
 - Outside Debug, warnings are errors. `CA2007` is on: every `await` in library code
   needs `ConfigureAwait(false)`.
 - The public API carries XML documentation.
-- The assembly is strong-named and public-signed; leave the signing properties alone.
+- Every assembly is strong-named and public-signed; leave the signing properties alone.
 - `assets/RELEASE-NOTES.txt` is maintained by the release tooling - do not edit it
   by hand.
+- Package metadata that differs per package (`Description`, `PackageTags`) belongs
+  in the project file; only settings shared by every package belong in
+  `Directory.Build.props`.
+- The README shipped inside a package is the one its `PackageReadmeFile` points at.
+  In a multi-package repository each project carries its own; the repository-root
+  README is a landing page and is not packed.
+- When the repository has solution filters, respect the split: the `*.build.slnf`
+  filter is what the release pipeline packs, `*.tests.slnf` is what CI runs.
 
 ## Tests
 
