@@ -75,7 +75,7 @@ jobs:
         path: |
           ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.nupkg
           ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.snupkg
-          NuGet.Config
+          nuget.config
           global.json
 
   deploy-github:

@@ -8,15 +8,11 @@
   <ItemGroup>
     <PackageVersion Include="AwesomeAssertions" Version="[9.5.0,)" />
     <PackageVersion Include="Bogus" Version="[35.6.5,)" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="[18.8.1,)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="[18.10.0,)" />
     <!-- Transitive of Testcontainers; pinned above the vulnerable 2025.1.0 (GHSA-q939-rpr3-3284). -->
     <PackageVersion Include="SSH.NET" Version="[2026.0.0,)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestcontainersVersion)" />
     <PackageVersion Include="Testcontainers.XunitV3" Version="$(TestcontainersVersion)" />
-    <PackageVersion Include="xunit.v3" Version="[3.2.2,)" />
-  </ItemGroup>
-  <ItemGroup>
-    <GlobalPackageReference Include="xunit.runner.visualstudio" Version="[3.1.5,)" />
-    <GlobalPackageReference Include="coverlet.collector" Version="[10.0.1,)" />
+    <PackageVersion Include="xunit.v3" Version="[4.0.0,)" />
   </ItemGroup>
 </Project>
