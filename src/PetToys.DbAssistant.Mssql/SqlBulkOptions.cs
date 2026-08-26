@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 
 namespace PetToys.DbAssistant.Mssql;
+
 /// <summary>
 /// Configuration parameters.
 /// </summary>
