@@ -10,6 +10,7 @@ using Microsoft.Data.SqlClient;
 using PetToys.DbAssistant.Mssql.Accessors;
 
 namespace PetToys.DbAssistant.Mssql;
+
 /// <summary>
 /// Provides a simple API for configuring an <see cref="SqlBulkCopy" />.
 /// </summary>

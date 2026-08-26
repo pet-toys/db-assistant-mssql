@@ -2,6 +2,10 @@
 
 namespace PetToys.DbAssistant.Mssql.Extensions;
 
+/// <summary>
+/// Extension methods on <see cref="SqlConnection"/> that start a bulk-copy
+/// configuration.
+/// </summary>
 public static class SqlConnectionExtensions
 {
     /// <summary>
