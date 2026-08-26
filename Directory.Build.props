@@ -2,7 +2,6 @@
   <PropertyGroup>
     <Authors>andbaz</Authors>
     <Copyright>Copyright © $([System.DateTime]::UtcNow.ToString(`yyyy`)) $(Authors). All rights reserved.</Copyright>
-    <Description>Mssql DB Assistant.</Description>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -30,7 +29,6 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/pet-toys/db-assistant-mssql.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/pet-toys/db-assistant-mssql</PackageProjectUrl>
-    <PackageTags>sql;mssql;bulk;insert;copy;performance</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

@@ -9,6 +9,8 @@
   </ItemGroup>
 
   <PropertyGroup Label="NuGet package">
+    <Description>Fluent, strongly-typed bulk insert for SQL Server — map entity properties to columns with compile-checked lambdas and stream them straight into SqlBulkCopy, with no intermediate DataTable and no hand-written IDataReader.</Description>
+    <PackageTags>sql;sql-server;mssql;sqlclient;sqlbulkcopy;bulk-insert;bulk-copy;bulk;database;performance</PackageTags>
     <PackageReleaseNotes>(Please write the package release notes in "RELEASE-NOTES.txt".)</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
