@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <PropertyGroup Label="NuGet package">
-    <Description>Fluent, strongly-typed bulk insert for SQL Server — map entity properties to columns with compile-checked lambdas and stream them straight into SqlBulkCopy, with no intermediate DataTable and no hand-written IDataReader.</Description>
-    <PackageTags>sql;sql-server;mssql;sqlclient;sqlbulkcopy;bulk-insert;bulk-copy;bulk;database;performance</PackageTags>
+    <Description>Fluent, strongly-typed bulk insert for SQL Server - map entity properties to columns with compile-checked lambdas and stream them straight into SqlBulkCopy, with no intermediate DataTable and no hand-written IDataReader.</Description>
+    <PackageTags>sql;sql-server;mssql;sqlbulkcopy;sqlclient;bulk-insert;bulk-copy;database;performance</PackageTags>
     <PackageReleaseNotes>(Please write the package release notes in "RELEASE-NOTES.txt".)</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
@@ -42,12 +42,20 @@
     </PropertyGroup>
   </Target>
 
-  <!-- CI reuses the same notes to set the GitHub release body:
-       dotnet msbuild ... -t:ExportPackageReleaseNotes -p:ReleaseNotesExportPath=<file> -->
-  <Target Name="ExportPackageReleaseNotes" DependsOnTargets="PreparePackageReleaseNotesFromFile"
-          Condition="'$(ReleaseNotesExportPath)' != ''">
+  <!-- Preview the notes the package will carry:
+       dotnet msbuild <project> -t:ExportPackageReleaseNotes
+       The destination defaults into obj/, so no caller has to invent a path:
+       MSBuild roots a POSIX one, which is what a Git Bash shell hands it, on
+       the current drive, and the file lands outside the repository.
+       CI overrides the property and reads the GitHub release body from it. -->
+  <Target Name="ExportPackageReleaseNotes" DependsOnTargets="PreparePackageReleaseNotesFromFile">
+    <PropertyGroup Condition="'$(ReleaseNotesExportPath)' == ''">
+      <ReleaseNotesExportPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'release-notes.txt'))</ReleaseNotesExportPath>
+    </PropertyGroup>
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(ReleaseNotesExportPath)'))" />
     <WriteLinesToFile File="$(ReleaseNotesExportPath)" Lines="$(PackageReleaseNotes)"
                       Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Importance="high" Text="Release notes exported to $(ReleaseNotesExportPath)" />
   </Target>
 
   <ItemGroup>

@@ -2,11 +2,11 @@
   <!--<Version>2.0</Version>-->
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
   <PropertyGroup>
-    <TestcontainersVersion>[4.13.0,)</TestcontainersVersion>
+    <TestcontainersVersion>[4.14.0,)</TestcontainersVersion>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AwesomeAssertions" Version="[9.5.0,)" />
+    <PackageVersion Include="AwesomeAssertions" Version="[9.6.0,)" />
     <PackageVersion Include="Bogus" Version="[35.6.5,)" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="[18.10.0,)" />
     <!-- Transitive of Testcontainers; pinned above the vulnerable 2025.1.0 (GHSA-q939-rpr3-3284). -->
