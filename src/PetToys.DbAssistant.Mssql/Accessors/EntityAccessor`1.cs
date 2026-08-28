@@ -289,10 +289,15 @@ internal sealed class EntityAccessor<TEntity> : DbDataReader
         _source = null;
         var asyncSource = _asyncSource;
         _asyncSource = null;
+        if (asyncSource is null) return;
 
         // Reached only when an asynchronously backed reader is disposed
         // synchronously: the library itself always awaits DisposeAsync, and
-        // leaking the enumerator would be worse than the blocking wait.
-        asyncSource?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        // leaking the enumerator would be worse than the blocking wait. The
+        // disposal runs on the thread pool so that the producer's own awaits
+        // resume there instead of on a synchronization context this thread is
+        // blocking. ConfigureAwait(false) would not do it: it configures a
+        // continuation, and a blocking wait registers none.
+        Task.Run(() => asyncSource.DisposeAsync().AsTask()).GetAwaiter().GetResult();
     }
 }
