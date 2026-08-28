@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -40,7 +41,19 @@ public sealed class BulkContextValidationTest
         using var connection = new SqlConnection();
         var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
 
-        var act = async () => await context.WriteDataAsync(null!);
+        var act = async () => await context.WriteDataAsync((IEnumerable<NullableEnabledEntity>)null!);
+
+        await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("entities");
+        connection.State.Should().Be(ConnectionState.Closed);
+    }
+
+    [Fact]
+    public async Task WriteDataAsync_NullAsyncEntities_ThrowsForEntitiesAndLeavesConnectionClosed()
+    {
+        using var connection = new SqlConnection();
+        var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
+
+        var act = async () => await context.WriteDataAsync((IAsyncEnumerable<NullableEnabledEntity>)null!);
 
         await act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("entities");
         connection.State.Should().Be(ConnectionState.Closed);
@@ -55,6 +68,20 @@ public sealed class BulkContextValidationTest
         var act = async () => await context.WriteDataAsync(Array.Empty<NullableEnabledEntity>());
 
         await act.Should().ThrowAsync<InvalidOperationException>();
+        connection.State.Should().Be(ConnectionState.Closed);
+    }
+
+    [Fact]
+    public async Task WriteDataAsync_AsyncSourceWithNoMappedProperties_ThrowsWithoutEnumerating()
+    {
+        using var connection = new SqlConnection();
+        var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
+        var source = new TrackingAsyncSource<NullableEnabledEntity>(new NullableEnabledEntity());
+
+        var act = async () => await context.WriteDataAsync(source);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        source.EnumeratorCount.Should().Be(0);
         connection.State.Should().Be(ConnectionState.Closed);
     }
 }
