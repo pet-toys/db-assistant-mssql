@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -100,6 +101,47 @@ public sealed class BulkInsertTest(MsSqlFixture fixture, ITestOutputHelper outpu
     }
 
     [DockerRequiredFact]
+    public async Task BulkInsert_AsyncSource_RoundTripsEveryRow()
+    {
+        const string tableName = "#async_source";
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var rows = FakeNullable.Generate(1_000);
+
+        await using var connection = await OpenConnectionAndCreateTableAsync(tableName);
+        var written = await connection.CreateBulkContext<NullableEnabledEntity>(tableName)
+            .MapProperty(e => e.Int0)
+            .MapProperty(e => e.Int1)
+            .MapProperty(e => e.Date0)
+            .MapProperty(e => e.Date1)
+            .MapProperty(e => e.Str0)
+            .MapProperty(e => e.Str1)
+            .MapProperty(e => e.Arr0)
+            .MapProperty(e => e.Arr1)
+            .WriteDataAsync(YieldAsync(rows), cancellationToken: cancellationToken);
+
+        written.Should().Be(rows.Count);
+        (await ExecuteCountAsync(connection, tableName, cancellationToken)).Should().Be(rows.Count);
+    }
+
+    [DockerRequiredFact]
+    public async Task BulkInsert_EmptyAsyncSource_WritesNothing()
+    {
+        const string tableName = "#empty_async";
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await using var connection = await OpenConnectionAndCreateTableAsync(tableName);
+        var written = await connection.CreateBulkContext<NullableEnabledEntity>(tableName)
+            .MapProperty(e => e.Int0)
+            .MapProperty(e => e.Date0)
+            .MapProperty(e => e.Str0)
+            .MapProperty(e => e.Arr0)
+            .WriteDataAsync(YieldAsync([]), cancellationToken: cancellationToken);
+
+        written.Should().Be(0);
+        (await ExecuteCountAsync(connection, tableName, cancellationToken)).Should().Be(0);
+    }
+
+    [DockerRequiredFact]
     public async Task BulkInsert_EmptyCollection_WritesNothing()
     {
         const string tableName = "#empty";
@@ -115,6 +157,23 @@ public sealed class BulkInsertTest(MsSqlFixture fixture, ITestOutputHelper outpu
 
         written.Should().Be(0);
         (await ExecuteCountAsync(connection, tableName, cancellationToken)).Should().Be(0);
+    }
+
+    /// <summary>
+    /// An asynchronous producer: rows arrive one at a time, as they would from
+    /// another database or a paged HTTP endpoint, so the copy is genuinely fed
+    /// row by row rather than from a collection that is already in memory.
+    /// </summary>
+    private static async IAsyncEnumerable<NullableEnabledEntity> YieldAsync(
+        IReadOnlyList<NullableEnabledEntity> rows,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        foreach (var row in rows)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Yield();
+            yield return row;
+        }
     }
 
     private static Faker<T> CreateFaker<T>()

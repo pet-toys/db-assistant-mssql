@@ -1,3 +1,26 @@
+10.3.0
+======
+
+Added:
+- WriteDataAsync now accepts an IAsyncEnumerable<TEntity> alongside
+  IEnumerable<TEntity>. The sequence is enumerated once and lazily, so rows
+  produced asynchronously (by another database, an HTTP API or a queue) stream
+  straight into SqlBulkCopy instead of being collected into a list first. The
+  cancellation token is passed to GetAsyncEnumerator, so a producer written as
+  an asynchronous iterator observes it as well as the copy does.
+
+Changed:
+- WriteDataAsync no longer compiles when the compiler cannot tell which of the
+  two overloads is meant: an untyped null literal, and any argument whose
+  static type implements both IEnumerable<TEntity> and IAsyncEnumerable<TEntity>
+  (Entity Framework Core's DbSet<TEntity>, for example). Neither interface
+  converts to the other, so neither overload wins. Cast the argument to the one
+  you want, for example WriteDataAsync((IEnumerable<Record>)source), which also
+  states at the call site whether the source is read synchronously or
+  asynchronously.
+
+----------------------------------------------------------------------
+
 10.2.2
 ======
 

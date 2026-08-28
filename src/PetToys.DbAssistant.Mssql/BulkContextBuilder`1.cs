@@ -72,7 +72,66 @@ public sealed class BulkContextBuilder<TEntity>
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entities);
+        EnsureMapped();
+        return await CopyAsync(
+                _ => new ValueTask<EntityAccessor<TEntity>>(new EntityAccessor<TEntity>(entities, _accessors)),
+                optionsBuilder,
+                transaction,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Writes data to the database using SqlBulkCopy, streaming it from an asynchronous source.
+    /// </summary>
+    /// <remarks>
+    /// The sequence is enumerated once and lazily: rows are pulled as the bulk copy consumes
+    /// them, so a source larger than memory never has to be collected first. The
+    /// <paramref name="cancellationToken"/> is passed to
+    /// <see cref="IAsyncEnumerable{T}.GetAsyncEnumerator"/>, so a producer written as an
+    /// asynchronous iterator observes the cancellation as well as the copy does. The destination
+    /// table name is passed to <see cref="SqlBulkCopy.DestinationTableName"/> verbatim, exactly as
+    /// it is for the synchronous overload.
+    /// <para>
+    /// A source whose type implements both <see cref="IEnumerable{T}"/> and
+    /// <see cref="IAsyncEnumerable{T}"/> matches both overloads equally and has to be cast to the
+    /// one it should take.
+    /// </para>
+    /// </remarks>
+    /// <param name="entities">An asynchronous sequence of objects of type <typeparamref name="TEntity" />, intended to be saved to a database.</param>
+    /// <param name="optionsBuilder">A delegate that is used to configure an <see cref="SqlBulkOptions"/>.</param>
+    /// <param name="transaction">The transaction to use for this operation.</param>
+    /// <param name="cancellationToken">The cancellation instruction.</param>
+    /// <returns>Number of rows stored.</returns>
+    /// <exception cref="ArgumentNullException">The <paramref name="entities"/> sequence is null.</exception>
+    /// <exception cref="InvalidOperationException">No property has been mapped via <see cref="MapProperty{TProperty}"/>.</exception>
+    public async ValueTask<long> WriteDataAsync(
+        IAsyncEnumerable<TEntity> entities,
+        Action<SqlBulkOptions>? optionsBuilder = null,
+        SqlTransaction? transaction = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities);
+        EnsureMapped();
+        return await CopyAsync(
+                token => EntityAccessor<TEntity>.CreateAsync(entities, _accessors, token),
+                optionsBuilder,
+                transaction,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private void EnsureMapped()
+    {
         if (_accessors.Count == 0) throw new InvalidOperationException("At least one property must be mapped before writing.");
+    }
+
+    private async ValueTask<long> CopyAsync(
+        Func<CancellationToken, ValueTask<EntityAccessor<TEntity>>> readerFactory,
+        Action<SqlBulkOptions>? optionsBuilder,
+        SqlTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
         var openedByThisCall = _connection.State != ConnectionState.Open;
         var options = new SqlBulkOptions();
         optionsBuilder?.Invoke(options);
@@ -89,7 +148,7 @@ public sealed class BulkContextBuilder<TEntity>
                 copier.ColumnMappings.Add(accessor.PropertyName, accessor.ColumnName);
             }
 
-            var reader = new EntityAccessor<TEntity>(entities, _accessors);
+            var reader = await readerFactory(cancellationToken).ConfigureAwait(false);
             await using (reader.ConfigureAwait(false))
             {
                 await copier.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);

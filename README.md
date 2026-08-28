@@ -10,9 +10,10 @@
 
 A small, focused wrapper around [`SqlBulkCopy`][sql-bulk-copy] for
 `Microsoft.Data.SqlClient`. Map entity properties to table columns with
-compile-checked lambda expressions and stream an `IEnumerable<TEntity>` straight
-to the server through a purpose-built [`DbDataReader`][db-data-reader] — no
-intermediate `DataTable`, no hand-rolled reader per table.
+compile-checked lambda expressions and stream an `IEnumerable<TEntity>` — or an
+`IAsyncEnumerable<TEntity>` — straight to the server through a purpose-built
+[`DbDataReader`][db-data-reader] — no intermediate `DataTable`, no hand-rolled
+reader per table.
 
 ## Why
 
@@ -43,6 +44,9 @@ wrong. This library closes that gap:
   fallback for models compiled without a nullable context.
 - **Streaming writer** — values flow through a purpose-built `DbDataReader`
   instead of an intermediate `DataTable`.
+- **Asynchronous sources** — pass an `IAsyncEnumerable<TEntity>` and rows are
+  pulled as the copy consumes them, so a producer that is itself asynchronous
+  (another database, an HTTP API, a queue) is never collected into a list first.
 - **Managed connection lifecycle** — a closed connection is opened for the copy
   and closed again afterwards, leaving it as it was found.
 - **Transactions and cancellation** — pass a `SqlTransaction` and a
@@ -150,6 +154,46 @@ await connection.CreateBulkContext<NullableDisabledEntity>("Records")
 
 The flag is ignored for value types, whose nullability is always known.
 
+### Streaming from an asynchronous source
+
+When the rows themselves arrive asynchronously, pass the
+`IAsyncEnumerable<TEntity>` directly. It is enumerated once and lazily — the
+reader holds a single row at a time and keeps the producer exactly one row ahead
+of the copy — so a source larger than memory never has to be materialized:
+
+```csharp
+static async IAsyncEnumerable<NullableEnabledEntity> ReadPagesAsync(
+    [EnumeratorCancellation] CancellationToken cancellationToken = default)
+{
+    for (var page = 0; ; page++)
+    {
+        var batch = await FetchPageAsync(page, cancellationToken);
+        if (batch.Count == 0) yield break;
+
+        foreach (var record in batch) yield return record;
+    }
+}
+
+long rowsCopied = await connection.CreateBulkContext<NullableEnabledEntity>("Records")
+    .MapProperty(e => e.Int0)
+    .MapProperty(e => e.Date0)
+    .WriteDataAsync(ReadPagesAsync(), cancellationToken: cancellationToken);
+```
+
+The overload is otherwise identical to the synchronous one: same options, same
+transaction, same row count. The `cancellationToken` is handed to
+`GetAsyncEnumerator`, so a producer written as an asynchronous iterator observes
+the cancellation as well as the copy does.
+
+A source whose type implements *both* `IEnumerable<TEntity>` and
+`IAsyncEnumerable<TEntity>` — Entity Framework Core's `DbSet<TEntity>`, for
+example — matches both overloads equally, and the compiler cannot pick. Say
+which one you mean:
+
+```csharp
+await context.WriteDataAsync((IAsyncEnumerable<Record>)dbContext.Set<Record>());
+```
+
 ### Tuning the bulk copy
 
 Pass a configuration delegate to adjust the underlying `SqlBulkCopy`:
@@ -189,6 +233,12 @@ await transaction.CommitAsync(cancellationToken);
   the lifetime of the transaction.
 - **Timeout defaults to no limit.** `BulkCopyTimeout` defaults to `0`, which
   means the copy waits indefinitely. Set it when you want a ceiling.
+- **An asynchronous source is read one row ahead.** The next row is pulled while
+  the current one is being copied, and the first one before the copy starts — so
+  a producer with side effects (acknowledging a queue message as it yields it)
+  can consume one row more than the copy writes when the write fails or is
+  cancelled. `BulkCopyTimeout` does not bound the wait for that first row;
+  cancel through the token instead.
 - **Unsupported property types fail fast.** Mapping a property whose type is not
   in the supported list throws an `InvalidOperationException` when the mapping is
   built, not midway through the copy.
