@@ -42,7 +42,7 @@ Three results follow from the full set, and two of them are unfavourable:
    [`CAPACITY.md`](CAPACITY.md).
 
 All of the above is with `EnableStreaming` off, which became the default in
-release 10.4.0 to match `SqlBulkCopy`. It was previously on, at a cost of one
+release 10.3.0 to match `SqlBulkCopy`. It was previously on, at a cost of one
 allocation per column per row. `InRowStreamingBenchmarks` prices that directly on
 the same shape and row count: 1,883.1 ms and 632 MB with it on against 1,209.0 ms
 and 88.86 MB with it off.
