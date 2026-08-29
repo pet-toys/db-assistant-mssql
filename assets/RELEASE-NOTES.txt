@@ -1,6 +1,16 @@
 10.4.0
 ======
 
+Added:
+- DateTimeOffset, TimeSpan, DateOnly and TimeOnly can now be mapped, alongside
+  the DateTime that was already supported. A property of one of these types
+  used to throw an InvalidOperationException when the mapping was built, so a
+  table with a datetimeoffset or a time column could not be copied through this
+  library at all. Their nullable forms follow, as they do for every other value
+  type. Nothing is converted or reinterpreted on the way to SqlBulkCopy: the
+  offset of a DateTimeOffset reaches a datetimeoffset column intact rather than
+  being normalised to UTC.
+
 Changed:
 - SqlBulkOptions.EnableStreaming now defaults to false, matching
   SqlBulkCopy.EnableStreaming. Nothing fails to compile and no copy changes

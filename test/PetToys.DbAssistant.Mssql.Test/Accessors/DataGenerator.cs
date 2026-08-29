@@ -17,6 +17,17 @@ public static class DataGenerator
 {
     private static readonly DateTime SampleDate = new(2026, 6, 14, 0, 0, 0, DateTimeKind.Utc);
 
+    // Neither UTC nor a whole number of hours, so an offset quietly dropped or normalised away
+    // cannot pass unnoticed.
+    private static readonly DateTimeOffset SampleOffset =
+        new(2026, 6, 14, 10, 15, 30, new TimeSpan(5, 30, 0));
+
+    private static readonly TimeSpan SampleSpan = new(0, 13, 45, 30, 123);
+
+    private static readonly DateOnly SampleDay = new(2026, 6, 14);
+
+    private static readonly TimeOnly SampleTime = new(13, 45, 30, 123);
+
     /// <summary>
     /// Cases for a nullable-enabled entity: <c>NullabilityInfoContext</c>
     /// always yields a definitive state, so <c>referenceNullable</c> is irrelevant.
@@ -105,6 +116,54 @@ public static class DataGenerator
         data.Add(Case("Arr0 (unknown state, flag => not null)",
             e => e.Arr0, "Arr0", "[Arr0]", typeof(byte[]), typeof(byte[]), false,
             new NullableDisabledEntity { Arr0 = [1, 2] }, new byte[] { 1, 2 }, referenceNullable: false));
+
+        return data;
+    }
+
+    /// <summary>
+    /// The date and time family. Each type appears twice, plain and nullable, because the nullable
+    /// form is what proves the whitelist is consulted for the underlying type: <c>DateOnly?</c> is
+    /// not in the set and never will be, and is accepted only because <c>DateOnly</c> is.
+    /// </summary>
+    public static TheoryData<AccessorCase<DateTimeEntity>> DateTimeFamilyCases()
+    {
+        var data = new TheoryData<AccessorCase<DateTimeEntity>>();
+
+        data.Add(Case("Offset0 (non-null DateTimeOffset)",
+            e => e.Offset0, "Offset0", "[Offset0]", typeof(DateTimeOffset), typeof(DateTimeOffset), false,
+            new DateTimeEntity { Offset0 = SampleOffset }, SampleOffset));
+
+        data.Add(Case("Offset1 (nullable DateTimeOffset)",
+            e => e.Offset1, "Offset1", "[Offset1]", typeof(DateTimeOffset?), typeof(DateTimeOffset), true,
+            new DateTimeEntity { Offset1 = SampleOffset }, SampleOffset));
+
+        data.Add(Case("Offset1 (nullable DateTimeOffset, value null)",
+            e => e.Offset1, "Offset1", "[Offset1]", typeof(DateTimeOffset?), typeof(DateTimeOffset), true,
+            new DateTimeEntity { Offset1 = null }, null));
+
+        data.Add(Case("Span0 (non-null TimeSpan)",
+            e => e.Span0, "Span0", "[Span0]", typeof(TimeSpan), typeof(TimeSpan), false,
+            new DateTimeEntity { Span0 = SampleSpan }, SampleSpan));
+
+        data.Add(Case("Span1 (nullable TimeSpan)",
+            e => e.Span1, "Span1", "[Span1]", typeof(TimeSpan?), typeof(TimeSpan), true,
+            new DateTimeEntity { Span1 = SampleSpan }, SampleSpan));
+
+        data.Add(Case("Date0 (non-null DateOnly)",
+            e => e.Date0, "Date0", "[Date0]", typeof(DateOnly), typeof(DateOnly), false,
+            new DateTimeEntity { Date0 = SampleDay }, SampleDay));
+
+        data.Add(Case("Date1 (nullable DateOnly)",
+            e => e.Date1, "Date1", "[Date1]", typeof(DateOnly?), typeof(DateOnly), true,
+            new DateTimeEntity { Date1 = SampleDay }, SampleDay));
+
+        data.Add(Case("Time0 (non-null TimeOnly)",
+            e => e.Time0, "Time0", "[Time0]", typeof(TimeOnly), typeof(TimeOnly), false,
+            new DateTimeEntity { Time0 = SampleTime }, SampleTime));
+
+        data.Add(Case("Time1 (nullable TimeOnly)",
+            e => e.Time1, "Time1", "[Time1]", typeof(TimeOnly?), typeof(TimeOnly), true,
+            new DateTimeEntity { Time1 = SampleTime }, SampleTime));
 
         return data;
     }

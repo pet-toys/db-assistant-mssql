@@ -18,6 +18,11 @@ public sealed class PropertyAccessorTest
         => AssertCase(@case, @case.Entity);
 
     [Theory]
+    [MemberData(nameof(DataGenerator.DateTimeFamilyCases), MemberType = typeof(DataGenerator))]
+    public void Ctor_DateTimeFamily_ResolvesMetadataAndValue(AccessorCase<DateTimeEntity> @case)
+        => AssertCase(@case, @case.Entity);
+
+    [Theory]
     [InlineData("custom", "[custom]")]
     [InlineData("custom col", "[custom col]")]
     [InlineData("[already]", "[already]")]
@@ -57,17 +62,32 @@ public sealed class PropertyAccessorTest
     [Fact]
     public void Ctor_UnsupportedPropertyType_ThrowsInvalidOperationException()
     {
-        var act = () => new PropertyAccessor<UnsupportedEntity, TimeSpan>(e => e.Span);
+        var act = () => new PropertyAccessor<UnsupportedEntity, Uri>(e => e.Link);
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*not supported*");
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*not supported*")
+            .WithMessage($"*{nameof(Uri)}*");
     }
 
+    /// <summary>
+    /// The nullable case deliberately uses a nullable value type rather than a nullable reference
+    /// type.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="PropertyAccessor{TEntity,TProperty}"/> resolves a nullable value type through
+    /// <see cref="Nullable.GetUnderlyingType"/> and reduces it before consulting the whitelist,
+    /// whereas a nullable reference type is resolved through <c>NullabilityInfoContext</c> and its
+    /// type is not reduced at all. <c>Uri?</c> would therefore travel a different branch and leave
+    /// the reduction this test exists for uncovered.
+    /// </remarks>
     [Fact]
     public void Ctor_UnsupportedNullablePropertyType_ThrowsInvalidOperationException()
     {
-        var act = () => new PropertyAccessor<UnsupportedEntity, TimeSpan?>(e => e.NullableSpan);
+        var act = () => new PropertyAccessor<UnsupportedEntity, LinkKind?>(e => e.NullableKind);
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*not supported*");
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*not supported*")
+            .WithMessage($"*{nameof(LinkKind)}*");
     }
 
     private static void AssertCase<TEntity>(AccessorCase<TEntity> @case, TEntity entity)
@@ -81,10 +101,25 @@ public sealed class PropertyAccessorTest
         @case.Accessor.GetValue(entity).Should().BeEquivalentTo(@case.Value);
     }
 
+    /// <summary>
+    /// Two properties of types the whitelist does not admit, held here to prove the guard fires.
+    /// </summary>
+    /// <remarks>
+    /// A <see cref="Uri"/> is a plausible thing to find on a real model and there is no SQL Server
+    /// type for it, so admitting it would mean the library choosing a stringification policy of its
+    /// own. An enum is rejected for a different reason: it has an underlying integral type, so
+    /// mapping one is a decision about whether to write the number or the name rather than an
+    /// omission, and that decision has not been taken.
+    /// </remarks>
     private sealed class UnsupportedEntity
     {
-        public TimeSpan Span { get; init; }
+        public Uri Link { get; init; } = new("https://example.invalid");
 
-        public TimeSpan? NullableSpan { get; init; }
+        public LinkKind? NullableKind { get; init; }
+    }
+
+    private enum LinkKind
+    {
+        Short,
     }
 }
