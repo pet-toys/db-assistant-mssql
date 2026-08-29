@@ -38,7 +38,7 @@ public sealed class BulkContextValidationTest
     [Fact]
     public async Task WriteDataAsync_NullEntities_ThrowsForEntitiesAndLeavesConnectionClosed()
     {
-        using var connection = new SqlConnection();
+        await using var connection = new SqlConnection();
         var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
 
         var act = async () => await context.WriteDataAsync((IEnumerable<NullableEnabledEntity>)null!);
@@ -50,7 +50,7 @@ public sealed class BulkContextValidationTest
     [Fact]
     public async Task WriteDataAsync_NullAsyncEntities_ThrowsForEntitiesAndLeavesConnectionClosed()
     {
-        using var connection = new SqlConnection();
+        await using var connection = new SqlConnection();
         var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
 
         var act = async () => await context.WriteDataAsync((IAsyncEnumerable<NullableEnabledEntity>)null!);
@@ -62,7 +62,7 @@ public sealed class BulkContextValidationTest
     [Fact]
     public async Task WriteDataAsync_NoMappedProperties_ThrowsAndLeavesConnectionClosed()
     {
-        using var connection = new SqlConnection();
+        await using var connection = new SqlConnection();
         var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
 
         var act = async () => await context.WriteDataAsync(Array.Empty<NullableEnabledEntity>());
@@ -74,7 +74,7 @@ public sealed class BulkContextValidationTest
     [Fact]
     public async Task WriteDataAsync_AsyncSourceWithNoMappedProperties_ThrowsWithoutEnumerating()
     {
-        using var connection = new SqlConnection();
+        await using var connection = new SqlConnection();
         var context = connection.CreateBulkContext<NullableEnabledEntity>("table");
         var source = new TrackingAsyncSource<NullableEnabledEntity>(new NullableEnabledEntity());
 

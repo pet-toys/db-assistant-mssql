@@ -140,7 +140,7 @@ public sealed class EntityAccessorAsyncTest
     [Fact]
     public async Task ReadAsync_OnSyncBackedReader_StillReads()
     {
-        using var reader = new EntityAccessor<NullableEnabledEntity>([FullRow], CreateAccessors());
+        await using var reader = new EntityAccessor<NullableEnabledEntity>([FullRow], CreateAccessors());
 
         (await reader.ReadAsync(Token)).Should().BeTrue();
         reader.GetInt32(0).Should().Be(7);

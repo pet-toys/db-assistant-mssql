@@ -52,7 +52,7 @@ public sealed class SqlBulkOptionsTest
     [Fact]
     public async Task WriteDataAsync_NoOptionsBuilder_UsesTheDeclaredDefaults()
     {
-        using var connection = new SqlConnection();
+        await using var connection = new SqlConnection();
         SqlBulkOptions? captured = null;
 
         var act = async () => await connection.CreateBulkContext<NullableEnabledEntity>("table")
