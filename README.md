@@ -283,6 +283,14 @@ and numerous, and it approaches nothing where they are large. `CAPACITY.md` give
 the arithmetic to apply to your own row instead of guessing which measured shape
 it resembles.
 
+**The same factor decides how many requests fit at once.** A batch endpoint under
+load is not one large copy, it is many copies on one instance, and one instance is
+one managed heap. Holding the row count per copy fixed and counting how many
+simultaneous copies survive gives back the same ratio: 2.17x on the four-column
+row and 1.25x on the fifteen-column one, against 1.93x and 1.25x for the single
+copy. So the number you work out from the rule above is also how many times more
+concurrent requests one instance of your service will take.
+
 **A hand-written reader's speed, without the hand-written reader.** The benchmark
 includes an `IDataReader` written for exactly one entity type, switching on the
 ordinal into direct property access: the best a caller could reasonably do by
@@ -294,8 +302,8 @@ mapped context took 1.30x longer on the wide shape and 1.62x longer on the narro
 one. Building a `DataTable` is cheaper per row than pulling values through a
 reader, and `SqlBulkCopy` does not take the same path for the two sources.
 
-The trade, then: a copy in isolation costs more time, and more rows fit at once.
-Small occasional copies do not need this package for throughput. Large or
+The trade, then: a copy in isolation costs more time, and more of them fit at
+once. Small occasional copies do not need this package for throughput. Large or
 concurrent ones are bounded by the ceiling rather than by the clock.
 
 ## License
