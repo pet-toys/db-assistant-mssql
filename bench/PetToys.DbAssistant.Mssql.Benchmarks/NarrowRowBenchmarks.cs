@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using PetToys.DbAssistant.Mssql.Extensions;
 
 namespace PetToys.DbAssistant.Mssql.Benchmarks;
 
@@ -24,32 +22,16 @@ public class NarrowRowBenchmarks : CopyBenchmark<NarrowRow>
 
     protected override string TableName => Destination;
 
-    protected override IReadOnlyList<ColumnSpec> Columns { get; } =
-    [
-        new("Id", "int", typeof(int)),
-        new("Name", "nvarchar(64)", typeof(string)),
-        new("CreatedAt", "datetime2", typeof(DateTime)),
-        new("Active", "bit", typeof(bool)),
-    ];
+    protected override IReadOnlyList<ColumnSpec> Columns => NarrowRowMapping.Columns;
 
     protected override IReadOnlyList<NarrowRow> GenerateRows(int count) => RowSet.Narrow(count);
 
-    protected override void Fill(object[] values, NarrowRow row)
-    {
-        values[0] = row.Id;
-        values[1] = row.Name;
-        values[2] = row.CreatedAt;
-        values[3] = row.Active;
-    }
+    protected override void Fill(object[] values, NarrowRow row) => NarrowRowMapping.Fill(values, row);
 
     protected override DbDataReader CreateHandWrittenReader(IEnumerable<NarrowRow> rows) =>
         new NarrowRowReader(rows, Columns);
 
     protected override async ValueTask<long> CopyMappedAsync() =>
-        await Connection.CreateBulkContext<NarrowRow>(Destination)
-            .MapProperty(row => row.Id)
-            .MapProperty(row => row.Name)
-            .MapProperty(row => row.CreatedAt)
-            .MapProperty(row => row.Active)
+        await NarrowRowMapping.Map(Connection, Destination)
             .WriteDataAsync(Rows, ConfigureLikeTheOtherArms);
 }

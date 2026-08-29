@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Data.SqlClient;
@@ -37,20 +36,6 @@ namespace PetToys.DbAssistant.Mssql.Benchmarks;
 public abstract class BulkCopyHarness<TRow>
     where TRow : class
 {
-    /// <summary>
-    /// The options every arm copies with. <see cref="SqlBulkCopyOptions.TableLock"/> is required for
-    /// minimal logging into a heap, and it is on every arm so that it cancels out of the ratios.
-    /// </summary>
-    protected const SqlBulkCopyOptions SharedCopyOptions = SqlBulkCopyOptions.TableLock;
-
-    /// <summary>
-    /// The streaming flag every arm copies with. It matches <c>SqlBulkOptions.EnableStreaming</c>,
-    /// whose default is <c>true</c> - note that <see cref="SqlBulkCopy.EnableStreaming"/>'s own
-    /// default is <c>false</c>, so a raw arm has to set it or it would not be measuring the same
-    /// thing the mapped arm is.
-    /// </summary>
-    protected const bool SharedEnableStreaming = true;
-
     private SqlServer _server = null!;
 
     /// <summary>
@@ -92,7 +77,7 @@ public abstract class BulkCopyHarness<TRow>
         await Connection.OpenAsync();
 
         await ExecuteAsync($"DROP TABLE IF EXISTS [{TableName}];");
-        await ExecuteAsync(BuildCreateTableStatement());
+        await ExecuteAsync(CopySettings.BuildCreateTableStatement(TableName, Columns));
 
         Rows = GenerateRows(RowCount);
         OnRowsBuilt();
@@ -137,49 +122,27 @@ public abstract class BulkCopyHarness<TRow>
     /// Configures the copier every raw arm shares, identically to what the library configures for a
     /// mapped one.
     /// </summary>
-    protected SqlBulkCopy CreateCopier()
-    {
-        var copier = new SqlBulkCopy(Connection, SharedCopyOptions, externalTransaction: null)
-        {
-            DestinationTableName = TableName,
-            EnableStreaming = SharedEnableStreaming,
-            BulkCopyTimeout = 0,
-        };
-
-        foreach (var column in Columns)
-        {
-            // The destination is bracket-quoted because the library quotes it, and the source is not
-            // because the library passes the property name through unquoted. Identical mappings, not
-            // merely equivalent ones.
-            copier.ColumnMappings.Add(column.Name, $"[{column.Name}]");
-        }
-
-        return copier;
-    }
+    protected SqlBulkCopy CreateCopier() =>
+        CopySettings.CreateCopier(Connection, TableName, Columns);
 
     /// <summary>
     /// Puts a mapped arm on exactly the configuration <see cref="CreateCopier"/> builds for the raw
     /// ones.
     /// </summary>
     /// <remarks>
-    /// Without this the arms would differ in the streaming flag alone, because
-    /// <see cref="SqlBulkCopy.EnableStreaming"/> defaults to <c>false</c> while
-    /// <c>SqlBulkOptions.EnableStreaming</c> defaults to <c>true</c>. That is a one-line difference
-    /// that would move every number in the report and appear nowhere in it.
+    /// The two defaults agree today, so this sets what both sides would have arrived at anyway.
+    /// It is written out rather than left implicit because the arms have already differed in this
+    /// one flag once: a difference of a single setting moves every number in the report, appears
+    /// nowhere in it, and gives no sign that the comparison stopped being one.
     /// </remarks>
     /// <param name="options">The options the library is about to copy with.</param>
-    protected static void ConfigureLikeTheOtherArms(SqlBulkOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        options.CopyOptions = SharedCopyOptions;
-        options.EnableStreaming = SharedEnableStreaming;
-        options.BulkCopyTimeout = 0;
-    }
+    protected static void ConfigureLikeTheOtherArms(SqlBulkOptions options) =>
+        CopySettings.Apply(options);
 
     /// <summary>
-    /// The shared configuration with the one flag the streaming classes are about turned off, so
-    /// that <c>SqlBulkCopy.EnableStreaming</c> sits at ADO.NET's own default rather than at the one
-    /// this library chooses.
+    /// The shared configuration with the one flag the streaming classes are about turned on, which
+    /// is the departure from the default a caller makes deliberately when their rows carry values
+    /// large enough to be stored off-row.
     /// </summary>
     /// <remarks>
     /// It lives here rather than on either streaming class because both need it and because a
@@ -187,10 +150,10 @@ public abstract class BulkCopyHarness<TRow>
     /// comparison.
     /// </remarks>
     /// <param name="options">The options the library is about to copy with.</param>
-    protected static void ConfigureWithStreamingOff(SqlBulkOptions options)
+    protected static void ConfigureWithStreamingOn(SqlBulkOptions options)
     {
         ConfigureLikeTheOtherArms(options);
-        options.EnableStreaming = false;
+        options.EnableStreaming = true;
     }
 
     /// <summary>Copies through a reader with the shared configuration.</summary>
@@ -201,11 +164,6 @@ public abstract class BulkCopyHarness<TRow>
         await copier.WriteToServerAsync(reader);
         return copier.RowsCopied64;
     }
-
-    private string BuildCreateTableStatement() =>
-        $"CREATE TABLE [{TableName}] (" +
-        string.Join(", ", Columns.Select(column => $"[{column.Name}] {column.DataType} NOT NULL")) +
-        ");";
 
     private async Task ExecuteAsync(string statement)
     {

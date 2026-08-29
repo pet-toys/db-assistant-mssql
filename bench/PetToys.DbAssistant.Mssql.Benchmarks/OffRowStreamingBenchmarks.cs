@@ -10,15 +10,16 @@ namespace PetToys.DbAssistant.Mssql.Benchmarks;
 
 /// <summary>
 /// <c>SqlBulkOptions.EnableStreaming</c> against itself, over rows whose MAX column is stored
-/// off-row - the half of the question where the library's default is expected to pay.
+/// off-row - the half of the question where turning the flag on pays.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This class exists because the library overrides ADO.NET here.
-/// <c>SqlBulkCopy.EnableStreaming</c> defaults to <c>false</c>; <c>SqlBulkOptions.EnableStreaming</c>
-/// defaults to <c>true</c>. That is a default chosen on the caller's behalf, and until now nothing
-/// measured it. The library's default is the baseline, so the ratio reads as what turning it off
-/// would cost.
+/// This class exists because the library used to override ADO.NET here, defaulting
+/// <c>SqlBulkOptions.EnableStreaming</c> to <c>true</c> where <c>SqlBulkCopy.EnableStreaming</c>
+/// defaults to <c>false</c>, with nothing measuring what that chose on the caller's behalf. The
+/// two agree now, and the arms answer the question a caller is left with instead: the default is
+/// the baseline, so the ratio reads as what turning streaming back on buys, and this is the row
+/// shape where the answer is that it is worth doing.
 /// </para>
 /// <para>
 /// This class answers only half of that. Streaming is a decision about how a value reaches the
@@ -53,13 +54,13 @@ public class OffRowStreamingBenchmarks : BulkCopyHarness<LargeRow>
 
     protected override IReadOnlyList<LargeRow> GenerateRows(int count) => RowSet.Large(count);
 
-    [Benchmark(Baseline = true, Description = "EnableStreaming on (the library default)")]
-    public async Task<long> StreamingOnAsync() =>
+    [Benchmark(Baseline = true, Description = "EnableStreaming off (the default)")]
+    public async Task<long> StreamingOffAsync() =>
         await Map().WriteDataAsync(Rows, ConfigureLikeTheOtherArms);
 
-    [Benchmark(Description = "EnableStreaming off")]
-    public async Task<long> StreamingOffAsync() =>
-        await Map().WriteDataAsync(Rows, ConfigureWithStreamingOff);
+    [Benchmark(Description = "EnableStreaming on")]
+    public async Task<long> StreamingOnAsync() =>
+        await Map().WriteDataAsync(Rows, ConfigureWithStreamingOn);
 
     /// <summary>
     /// Fails the setup rather than the reading of the report if the documents would sit in-row. A

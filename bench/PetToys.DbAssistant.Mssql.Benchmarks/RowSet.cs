@@ -34,7 +34,8 @@ public static class RowSet
 
     /// <summary>Builds the narrow row set.</summary>
     /// <param name="count">How many rows to build.</param>
-    public static IReadOnlyList<NarrowRow> Narrow(int count)
+    /// <param name="shareText">Whether text may come from the pool; see <see cref="Distinguish(string, int, bool)"/>.</param>
+    public static IReadOnlyList<NarrowRow> Narrow(int count, bool shareText = true)
     {
         var random = new Random(Seed);
         var rows = new List<NarrowRow>(count);
@@ -44,7 +45,7 @@ public static class RowSet
             rows.Add(new NarrowRow
             {
                 Id = index,
-                Name = Names[random.Next(Names.Length)],
+                Name = Distinguish(Names[random.Next(Names.Length)], index, shareText),
                 CreatedAt = Epoch.AddSeconds(random.Next(0, 31_536_000)),
                 Active = random.Next(2) == 0,
             });
@@ -55,7 +56,8 @@ public static class RowSet
 
     /// <summary>Builds the wide row set.</summary>
     /// <param name="count">How many rows to build.</param>
-    public static IReadOnlyList<WideRow> Wide(int count)
+    /// <param name="shareText">Whether text and payloads may come from the pools; see <see cref="Distinguish(string, int, bool)"/>.</param>
+    public static IReadOnlyList<WideRow> Wide(int count, bool shareText = true)
     {
         var random = new Random(Seed);
         var payloads = BuildPayloads(random);
@@ -72,16 +74,16 @@ public static class RowSet
                 Small = (short)random.Next(short.MinValue, short.MaxValue),
                 Tiny = (byte)random.Next(byte.MaxValue + 1),
                 Code = index.ToString("D8", CultureInfo.InvariantCulture),
-                Name = Names[random.Next(Names.Length)],
+                Name = Distinguish(Names[random.Next(Names.Length)], index, shareText),
                 Initial = (char)('A' + random.Next(26)),
                 Amount = Math.Round((decimal)random.NextDouble() * 10_000m, 2),
                 Ratio = random.NextDouble(),
                 Factor = (float)random.NextDouble(),
                 Flag = random.Next(2) == 0,
                 Identifier = identifiers[random.Next(identifiers.Length)],
-                Payload = payloads[random.Next(payloads.Length)],
+                Payload = Distinguish(payloads[random.Next(payloads.Length)], shareText),
                 CreatedAt = Epoch.AddSeconds(random.Next(0, 31_536_000)),
-                Document = documents[random.Next(documents.Length)],
+                Document = Distinguish(documents[random.Next(documents.Length)], index, shareText),
             });
         }
 
@@ -136,6 +138,31 @@ public static class RowSet
 
         return documents;
     }
+
+    /// <summary>
+    /// Returns the pooled value itself, or a copy of it belonging to this row alone.
+    /// </summary>
+    /// <remarks>
+    /// The pools below exist so that generating a row set is not most of a throughput benchmark's
+    /// memory, which is right for a benchmark and wrong for the capacity probe. The probe's whole
+    /// subject is what the caller's own collection weighs, and a million rows sharing sixteen
+    /// strings is a collection nobody has: the sharing inflates the probe's ratio by making the
+    /// cost both mechanisms pay artificially small. So sharing is a parameter rather than a
+    /// property of the generator, and the row shape stays the single declaration it was.
+    /// </remarks>
+    /// <param name="pooled">The value drawn from the pool.</param>
+    /// <param name="index">The row's index, which is what makes the copy unique.</param>
+    /// <param name="shareText">Whether the pooled value may be shared.</param>
+    private static string Distinguish(string pooled, int index, bool shareText) =>
+        shareText
+            ? pooled
+            : string.Create(CultureInfo.InvariantCulture, $"{pooled}-{index:D8}");
+
+    /// <summary>Returns the pooled payload itself, or a copy belonging to this row alone.</summary>
+    /// <param name="pooled">The array drawn from the pool.</param>
+    /// <param name="shareText">Whether the pooled array may be shared.</param>
+    private static byte[] Distinguish(byte[] pooled, bool shareText) =>
+        shareText ? pooled : (byte[])pooled.Clone();
 
     /// <summary>
     /// A pool of names of differing lengths. Text is written by length, so a single fixed string

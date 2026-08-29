@@ -6,8 +6,8 @@ namespace PetToys.DbAssistant.Mssql.Benchmarks;
 
 /// <summary>
 /// <c>SqlBulkOptions.EnableStreaming</c> against itself over the wide row, whose every value is
-/// stored in-row - the half of the question that decides what the library's default costs an
-/// ordinary caller.
+/// stored in-row - the half of the question that decides what turning the flag on costs a caller
+/// who has nothing to stream.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,7 +21,8 @@ namespace PetToys.DbAssistant.Mssql.Benchmarks;
 /// The class exists because that cost turned out to be the largest single effect in this project,
 /// and it was found by hand, by flipping a constant between two runs, which is not a result the
 /// repository can keep. Reproducing it as two arms of one class puts it in the recorded baseline
-/// where a later change can contradict it.
+/// where a later change can contradict it. It is also the measurement the library's default was
+/// changed on, which makes it the measurement that would catch that change being wrong.
 /// </para>
 /// <para>
 /// The shape and the row counts are the wide row's on purpose, so these numbers can be read
@@ -42,13 +43,13 @@ public class InRowStreamingBenchmarks : BulkCopyHarness<WideRow>
 
     protected override IReadOnlyList<WideRow> GenerateRows(int count) => RowSet.Wide(count);
 
-    [Benchmark(Baseline = true, Description = "EnableStreaming on (the library default)")]
-    public async Task<long> StreamingOnAsync() =>
+    [Benchmark(Baseline = true, Description = "EnableStreaming off (the default)")]
+    public async Task<long> StreamingOffAsync() =>
         await WideRowMapping.Map(Connection, Destination)
             .WriteDataAsync(Rows, ConfigureLikeTheOtherArms);
 
-    [Benchmark(Description = "EnableStreaming off")]
-    public async Task<long> StreamingOffAsync() =>
+    [Benchmark(Description = "EnableStreaming on")]
+    public async Task<long> StreamingOnAsync() =>
         await WideRowMapping.Map(Connection, Destination)
-            .WriteDataAsync(Rows, ConfigureWithStreamingOff);
+            .WriteDataAsync(Rows, ConfigureWithStreamingOn);
 }

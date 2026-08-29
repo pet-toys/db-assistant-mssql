@@ -26,24 +26,7 @@ public class WideRowBenchmarks : CopyBenchmark<WideRow>
 
     protected override IReadOnlyList<WideRow> GenerateRows(int count) => RowSet.Wide(count);
 
-    protected override void Fill(object[] values, WideRow row)
-    {
-        values[0] = row.Id;
-        values[1] = row.BigId;
-        values[2] = row.Small;
-        values[3] = row.Tiny;
-        values[4] = row.Code;
-        values[5] = row.Name;
-        values[6] = row.Initial;
-        values[7] = row.Amount;
-        values[8] = row.Ratio;
-        values[9] = row.Factor;
-        values[10] = row.Flag;
-        values[11] = row.Identifier;
-        values[12] = row.Payload;
-        values[13] = row.CreatedAt;
-        values[14] = row.Document;
-    }
+    protected override void Fill(object[] values, WideRow row) => WideRowMapping.Fill(values, row);
 
     protected override DbDataReader CreateHandWrittenReader(IEnumerable<WideRow> rows) =>
         new WideRowReader(rows, Columns);

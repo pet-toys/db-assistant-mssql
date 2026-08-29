@@ -58,4 +58,28 @@ internal static class WideRowMapping
             .MapProperty(row => row.Payload)
             .MapProperty(row => row.CreatedAt)
             .MapProperty(row => row.Document);
+
+    /// <summary>Writes one row's values into a buffer, in column order.</summary>
+    /// <param name="values">The buffer to fill; its length is the column count.</param>
+    /// <param name="row">The row to read.</param>
+    public static void Fill(object[] values, WideRow row)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        ArgumentNullException.ThrowIfNull(row);
+        values[0] = row.Id;
+        values[1] = row.BigId;
+        values[2] = row.Small;
+        values[3] = row.Tiny;
+        values[4] = row.Code;
+        values[5] = row.Name;
+        values[6] = row.Initial;
+        values[7] = row.Amount;
+        values[8] = row.Ratio;
+        values[9] = row.Factor;
+        values[10] = row.Flag;
+        values[11] = row.Identifier;
+        values[12] = row.Payload;
+        values[13] = row.CreatedAt;
+        values[14] = row.Document;
+    }
 }
