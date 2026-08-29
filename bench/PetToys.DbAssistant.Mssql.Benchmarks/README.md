@@ -36,7 +36,9 @@ Three results follow from the full set, and two of them are unfavourable:
    an object.
 3. **Capacity is where the difference is.** Under a fixed heap ceiling the
    mapped context copies 1.93x as many narrow rows and 1.25x as many wide ones,
-   because it holds the caller's collection once rather than twice. See
+   because it holds the caller's collection once rather than twice. The same
+   factor holds for simultaneous copies on one instance, which is the shape of a
+   burst: 2.17x and 1.25x, measured rather than extrapolated. See
    [`CAPACITY.md`](CAPACITY.md).
 
 All of the above is with `EnableStreaming` off, which became the default in
@@ -297,6 +299,54 @@ its own values. The row shape, columns and mappings are unchanged either way.
 `--probe` is the only entry point. A benchmark invocation starts no attempt
 whatever its filter, and `--probe-attempt` is how the probe starts its own
 children.
+
+## Capacity: how many copies fit at once
+
+One copy is not the situation this package was written for. A batch endpoint
+takes many requests at a time, each already deserialised into memory, and one
+service instance is one managed heap: the copies do not queue for memory the way
+they queue for a CPU. So with the row count per copy fixed, how many simultaneous
+copies survive?
+
+```bash
+dotnet run -c Release -f net10.0 --project bench/PetToys.DbAssistant.Mssql.Benchmarks -- --probe --concurrent --shape narrow --heap 256 --rows 100000
+```
+
+`--concurrent` selects this axis and `--rows` sets the size of one copy,
+defaulting to a hundred thousand. Everything else is the same search over the
+same shapes: doubling, bisection, every reported figure confirmed twice, no
+duration, both source weights. The result is in [`CAPACITY.md`](CAPACITY.md)
+beside the single-copy one.
+
+**The copies share one process, and so one heap.** That is the thing being
+measured. Copies placed in separate processes would each be given the ceiling,
+which measures several instances, and several instances is a case a reader can
+already work out by multiplying.
+
+**Every source is built before any copy starts.** Their sum is what the ceiling
+has to hold. Building each one as its own copy began would let the peak depend on
+how the copies happened to interleave, which is a property of the scheduler
+rather than of either mechanism.
+
+**Each copy gets its own table and its own connection.** Copies into one table
+are what a real caller does, and multiple bulk loads into a heap under `TABLOCK`
+take compatible locks, so it would mostly work. Mostly is the problem: a lock
+wait would put the boundary where the server's locking falls rather than where
+the client's memory does, and a deadlock exits non-zero, which the probe reads as
+"did not fit". A wrong answer is worse than a missing one.
+
+**Attempts stop at 64 simultaneous copies.** `Microsoft.Data.SqlClient` defaults
+`Max Pool Size` to 100, and an attempt that asked for more connections than the
+pool allows would block, time out, and be recorded as a ceiling it is not.
+Reaching 64 is reported as a lower bound. Raising the pool limit instead was
+rejected: a probe that has to tune the connection pool to get its answer is a
+probe whose answer includes the connection pool.
+
+**Read the ratio as one significant figure, and lower `--rows` if you want
+more.** A copy count is a small integer, so one either way moves the ratio
+appreciably - at the recorded settings, by about a seventh. A smaller `--rows`
+buys resolution and risks running into the concurrency cap, which is the trade
+the default is picked for.
 
 ## Why this is not in CI
 
