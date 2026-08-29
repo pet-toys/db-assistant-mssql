@@ -74,7 +74,7 @@ public abstract class CopyBenchmark<TRow> : BulkCopyHarness<TRow>
     [Benchmark(Description = "Reflective reader")]
     public async Task<long> CopyReflectiveAsync()
     {
-        using var reader = new ReflectiveRowReader<TRow>(Rows, Columns);
+        await using var reader = new ReflectiveRowReader<TRow>(Rows, Columns);
         return await CopyReaderAsync(reader);
     }
 
@@ -86,7 +86,7 @@ public abstract class CopyBenchmark<TRow> : BulkCopyHarness<TRow>
     [Benchmark(Description = "Hand-written reader")]
     public async Task<long> CopyHandWrittenAsync()
     {
-        using var reader = CreateHandWrittenReader(Rows);
+        await using var reader = CreateHandWrittenReader(Rows);
         return await CopyReaderAsync(reader);
     }
 
