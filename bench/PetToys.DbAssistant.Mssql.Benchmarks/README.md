@@ -110,11 +110,14 @@ you copy into.
 
 The run creates five tables in whatever database the connection string names,
 dropping them first if present: `narrow_row`, `wide_row`, `source_shape_row`,
-`streaming_row` and `in_row_streaming_row`. The capacity probe adds
-`probe_narrow_row` and `probe_wide_row`. Each is generated from the column list
-its class declares, which is the same list every arm's mappings are built from,
-so the schema and the arms cannot drift apart. Tables are truncated between
-iterations and left behind at the end. Point the run at a scratch database.
+`streaming_row` and `in_row_streaming_row`. The capacity probe adds up to
+sixty-four numbered tables per shape, `probe_narrow_row_00` through
+`probe_narrow_row_63` and the same for `probe_wide_row`, one per simultaneous
+copy; every attempt drops the whole range before recreating the ones it needs.
+Each table is generated from the column list its class declares, which is the
+same list every arm's mappings are built from, so the schema and the arms cannot
+drift apart. Tables are truncated between iterations and left behind at the end.
+Point the run at a scratch database.
 
 The runner prints the database's recovery model before measuring. See
 [Reading a run](#reading-a-run).

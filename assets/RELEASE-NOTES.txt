@@ -2,6 +2,12 @@
 ======
 
 Added:
+- WriteDataAsync now accepts an IAsyncEnumerable<TEntity> alongside
+  IEnumerable<TEntity>. The sequence is enumerated once and lazily, so rows
+  produced asynchronously (by another database, an HTTP API or a queue) stream
+  straight into SqlBulkCopy instead of being collected into a list first. The
+  cancellation token is passed to GetAsyncEnumerator, so a producer written as
+  an asynchronous iterator observes it as well as the copy does.
 - DateTimeOffset, TimeSpan, DateOnly and TimeOnly can now be mapped, alongside
   the DateTime that was already supported. A property of one of these types
   used to throw an InvalidOperationException when the mapping was built, so a
@@ -21,26 +27,6 @@ Changed:
   WriteDataAsync(records, options => options.EnableStreaming = true). Where
   every value fits in-row the previous default had nothing to stream and
   still paid for the machinery, an allocation per column on every row.
-- The two remaining defaults are now documented rather than merely stated.
-  BulkCopyTimeout stays at 0, deliberately unlike SqlBulkCopy's thirty
-  seconds, because a copy of millions of rows outlives that limit and would
-  be abandoned part-written. CopyOptions stays at SqlBulkCopyOptions.Default,
-  which is what an unconfigured SqlBulkCopy uses.
-
-----------------------------------------------------------------------
-
-10.3.0
-======
-
-Added:
-- WriteDataAsync now accepts an IAsyncEnumerable<TEntity> alongside
-  IEnumerable<TEntity>. The sequence is enumerated once and lazily, so rows
-  produced asynchronously (by another database, an HTTP API or a queue) stream
-  straight into SqlBulkCopy instead of being collected into a list first. The
-  cancellation token is passed to GetAsyncEnumerator, so a producer written as
-  an asynchronous iterator observes it as well as the copy does.
-
-Changed:
 - WriteDataAsync no longer compiles when the compiler cannot tell which of the
   two overloads is meant: an untyped null literal, and any argument whose
   static type implements both IEnumerable<TEntity> and IAsyncEnumerable<TEntity>
@@ -49,6 +35,11 @@ Changed:
   you want, for example WriteDataAsync((IEnumerable<Record>)source), which also
   states at the call site whether the source is read synchronously or
   asynchronously.
+- The two remaining defaults are now documented rather than merely stated.
+  BulkCopyTimeout stays at 0, deliberately unlike SqlBulkCopy's thirty
+  seconds, because a copy of millions of rows outlives that limit and would
+  be abandoned part-written. CopyOptions stays at SqlBulkCopyOptions.Default,
+  which is what an unconfigured SqlBulkCopy uses.
 
 ----------------------------------------------------------------------
 
