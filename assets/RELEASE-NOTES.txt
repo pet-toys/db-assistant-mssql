@@ -1,3 +1,24 @@
+10.4.0
+======
+
+Changed:
+- SqlBulkOptions.EnableStreaming now defaults to false, matching
+  SqlBulkCopy.EnableStreaming. Nothing fails to compile and no copy changes
+  what it writes, so performance is the only place this shows. Turn it back
+  on for rows carrying a varchar(max), nvarchar(max) or varbinary(max) column
+  whose values are large enough that SQL Server stores them off-row, which is
+  the case the flag exists for:
+  WriteDataAsync(records, options => options.EnableStreaming = true). Where
+  every value fits in-row the previous default had nothing to stream and
+  still paid for the machinery, an allocation per column on every row.
+- The two remaining defaults are now documented rather than merely stated.
+  BulkCopyTimeout stays at 0, deliberately unlike SqlBulkCopy's thirty
+  seconds, because a copy of millions of rows outlives that limit and would
+  be abandoned part-written. CopyOptions stays at SqlBulkCopyOptions.Default,
+  which is what an unconfigured SqlBulkCopy uses.
+
+----------------------------------------------------------------------
+
 10.3.0
 ======
 

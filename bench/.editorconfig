@@ -1,0 +1,37 @@
+# Benchmark projects. Everything not listed here is inherited from the
+# repository root; this file only relaxes what does not apply to code that
+# ships no public API and exists to be measured.
+
+###############################################################################
+# C#
+###############################################################################
+
+[*.cs]
+
+#------------------------------------------------------------------------------
+# Severity: code quality (CA)
+#------------------------------------------------------------------------------
+
+# CA2007: Consider calling ConfigureAwait on the awaited task -- off, a
+# benchmark runs on BenchmarkDotNet's own host with no synchronization context,
+# so ConfigureAwait(false) adds noise without benefit. It would also put a
+# construct in the measured arm that the three arms it is compared against do
+# not have.
+dotnet_diagnostic.CA2007.severity = none
+
+# CA1859: Use concrete types when possible for improved performance -- off, the
+# reader arms are deliberately held through the abstraction SqlBulkCopy consumes
+# them by, which is the thing being compared.
+dotnet_diagnostic.CA1859.severity = none
+
+#------------------------------------------------------------------------------
+# Severity: compiler (CS)
+#------------------------------------------------------------------------------
+
+# CS1591: Missing XML comment for publicly visible type or member -- off.
+# Benchmark projects publish no API, so they document none. BenchmarkDotNet
+# requires public classes and public methods, and every one of them would
+# otherwise demand an XML comment and fail the Release build under
+# TreatWarningsAsErrors. GenerateDocumentationFile itself stays on: IDE0005 is
+# only reported on build while a documentation file is being generated.
+dotnet_diagnostic.CS1591.severity = none

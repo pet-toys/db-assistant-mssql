@@ -34,8 +34,12 @@
     <File Path="docs/CONTRIBUTING.md" />
     <File Path="docs/SECURITY.md" />
   </Folder>
+  <Folder Name="/bench/">
+    <File Path="bench/.editorconfig" />
+    <File Path="bench/Directory.Packages.props" />
+    <Project Path="bench/PetToys.DbAssistant.Mssql.Benchmarks/PetToys.DbAssistant.Mssql.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
-    <File Path="src/ObjectReader.cs" />
     <Project Path="src/PetToys.DbAssistant.Mssql/PetToys.DbAssistant.Mssql.csproj" />
   </Folder>
   <Folder Name="/test/">

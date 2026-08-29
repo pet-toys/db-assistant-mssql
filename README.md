@@ -5,14 +5,14 @@
 ![Database Assistant for SQL Server](https://raw.githubusercontent.com/pet-toys/db-assistant-mssql/refs/heads/dev/assets/promotion.png)
 
 > Bulk-load your entities into SQL Server with a fluent, strongly-typed mapping
-> API — no `DataTable`, no boilerplate, just `SqlBulkCopy` doing what it does
+> API: no `DataTable`, no boilerplate, just `SqlBulkCopy` doing what it does
 > best.
 
 A small, focused wrapper around [`SqlBulkCopy`][sql-bulk-copy] for
 `Microsoft.Data.SqlClient`. Map entity properties to table columns with
-compile-checked lambda expressions and stream an `IEnumerable<TEntity>` — or an
-`IAsyncEnumerable<TEntity>` — straight to the server through a purpose-built
-[`DbDataReader`][db-data-reader] — no intermediate `DataTable`, no hand-rolled
+compile-checked lambda expressions and stream an `IEnumerable<TEntity>`, or an
+`IAsyncEnumerable<TEntity>`, straight to the server through a purpose-built
+[`DbDataReader`][db-data-reader]: no intermediate `DataTable`, no hand-rolled
 reader per table.
 
 ## Why
@@ -37,24 +37,24 @@ wrong. This library closes that gap:
 
 ## Features
 
-- **Fluent builder** — `CreateBulkContext` → `MapProperty` → `WriteDataAsync`.
+- **Fluent builder**: `CreateBulkContext` → `MapProperty` → `WriteDataAsync`.
 - **Expression-based column mapping** with an optional explicit column alias.
 - **Nullable-aware mapping** for both nullable value types and nullable
   reference types, driven by `NullabilityInfoContext`, with a `referenceNullable`
   fallback for models compiled without a nullable context.
-- **Streaming writer** — values flow through a purpose-built `DbDataReader`
+- **Streaming writer**: values flow through a purpose-built `DbDataReader`
   instead of an intermediate `DataTable`.
-- **Asynchronous sources** — pass an `IAsyncEnumerable<TEntity>` and rows are
+- **Asynchronous sources**: pass an `IAsyncEnumerable<TEntity>` and rows are
   pulled as the copy consumes them, so a producer that is itself asynchronous
   (another database, an HTTP API, a queue) is never collected into a list first.
-- **Managed connection lifecycle** — a closed connection is opened for the copy
+- **Managed connection lifecycle**: a closed connection is opened for the copy
   and closed again afterwards, leaving it as it was found.
-- **Transactions and cancellation** — pass a `SqlTransaction` and a
+- **Transactions and cancellation**: pass a `SqlTransaction` and a
   `CancellationToken` to `WriteDataAsync`.
-- **Tunable copy** — configure `SqlBulkCopyOptions`, streaming, and the bulk
+- **Tunable copy**: configure `SqlBulkCopyOptions`, streaming, and the bulk
   copy timeout through `SqlBulkOptions`; the call returns the number of rows
   copied.
-- **Broad type support** — `bool`, `char`, `string`, `byte`, `short`, `int`,
+- **Broad type support**: `bool`, `char`, `string`, `byte`, `short`, `int`,
   `long`, `float`, `double`, `decimal`, `DateTime`, `Guid`, `byte[]`, and
   `char[]`.
 - **Multi-targets** `net8.0`, `net9.0`, and `net10.0`.
@@ -67,7 +67,7 @@ dotnet add package PetToys.DbAssistant.Mssql
 
 ## Getting started
 
-The examples below map the same entity the test suite uses — a class with a
+The examples below map the same entity the test suite uses, a class with a
 spread of supported types, including nullable value and reference types:
 
 ```csharp
@@ -141,7 +141,7 @@ For reference-typed properties the mapper consults the model's nullable
 annotations to decide whether the column accepts `NULL`. If the entity was
 compiled without a nullable context (for example under `#nullable disable`),
 that information is unavailable, and the `referenceNullable` flag supplies it
-instead — it defaults to `true`:
+instead. It defaults to `true`:
 
 ```csharp
 // NullableDisabledEntity is declared under #nullable disable.
@@ -157,9 +157,9 @@ The flag is ignored for value types, whose nullability is always known.
 ### Streaming from an asynchronous source
 
 When the rows themselves arrive asynchronously, pass the
-`IAsyncEnumerable<TEntity>` directly. It is enumerated once and lazily — the
+`IAsyncEnumerable<TEntity>` directly. It is enumerated once and lazily: the
 reader holds a single row at a time and keeps the producer exactly one row ahead
-of the copy — so a source larger than memory never has to be materialized:
+of the copy, so a source larger than memory never has to be materialized:
 
 ```csharp
 static async IAsyncEnumerable<NullableEnabledEntity> ReadPagesAsync(
@@ -186,8 +186,8 @@ transaction, same row count. The `cancellationToken` is handed to
 the cancellation as well as the copy does.
 
 A source whose type implements *both* `IEnumerable<TEntity>` and
-`IAsyncEnumerable<TEntity>` — Entity Framework Core's `DbSet<TEntity>`, for
-example — matches both overloads equally, and the compiler cannot pick. Say
+`IAsyncEnumerable<TEntity>` (Entity Framework Core's `DbSet<TEntity>`, for
+example) matches both overloads equally, and the compiler cannot pick. Say
 which one you mean:
 
 ```csharp
@@ -206,9 +206,17 @@ await connection.CreateBulkContext<NullableEnabledEntity>("Records")
     {
         options.BulkCopyTimeout = 60;                          // seconds; 0 = no limit (default)
         options.CopyOptions = SqlBulkCopyOptions.TableLock;
-        options.EnableStreaming = true;                        // default
+        options.EnableStreaming = true;                        // off by default
     });
 ```
+
+`EnableStreaming` is off, which is `SqlBulkCopy`'s own default. Turn it on
+when your rows carry a `varchar(max)`, `nvarchar(max)` or `varbinary(max)`
+column whose values are large enough that SQL Server stores them off-row:
+streaming writes such a value without holding it in memory, and that is the
+case the flag exists for. Where every value fits in-row it has nothing to
+stream and still pays for the machinery, an allocation per column on every
+row, so off is the cheaper default for ordinary rows.
 
 ### Transactions and cancellation
 
@@ -234,7 +242,7 @@ await transaction.CommitAsync(cancellationToken);
 - **Timeout defaults to no limit.** `BulkCopyTimeout` defaults to `0`, which
   means the copy waits indefinitely. Set it when you want a ceiling.
 - **An asynchronous source is read one row ahead.** The next row is pulled while
-  the current one is being copied, and the first one before the copy starts — so
+  the current one is being copied, and the first one before the copy starts, so
   a producer with side effects (acknowledging a queue message as it yields it)
   can consume one row more than the copy writes when the write fails or is
   cancelled. `BulkCopyTimeout` does not bound the wait for that first row;
@@ -248,6 +256,46 @@ await transaction.CommitAsync(cancellationToken);
   as possible.
 
 More runnable examples live in the [unit tests][tests-url].
+
+## Performance
+
+Measured rather than asserted. The benchmark project is in
+[`bench/`](bench/PetToys.DbAssistant.Mssql.Benchmarks), the recorded throughput
+run in [`BASELINE.md`](bench/PetToys.DbAssistant.Mssql.Benchmarks/BASELINE.md)
+and the recorded capacity run in
+[`CAPACITY.md`](bench/PetToys.DbAssistant.Mssql.Benchmarks/CAPACITY.md). Both were
+taken on one machine against one containerised server: the ratios below travel,
+the durations and row counts behind them do not.
+
+**More of your rows fit in the same process.** The mainstream approach copies
+every row into a `DataTable` first, so a caller who has just deserialised a
+request body holds their data twice. This library holds it once and streams the
+second copy a row at a time. Under a fixed heap ceiling, with a distinct value per
+row, that was 1.93x as many four-column rows and 1.25x as many fifteen-column
+ones.
+
+The spread is the point, and it is a rule rather than a range: a `DataTable` adds
+row bookkeeping plus a boxed copy of every value-typed column, which is roughly
+fixed per column and does not grow with the size of the values, while your own
+rows weigh whatever your data weighs. So the gain is largest where rows are small
+and numerous, and it approaches nothing where they are large. `CAPACITY.md` gives
+the arithmetic to apply to your own row instead of guessing which measured shape
+it resembles.
+
+**A hand-written reader's speed, without the hand-written reader.** The benchmark
+includes an `IDataReader` written for exactly one entity type, switching on the
+ordinal into direct property access: the best a caller could reasonably do by
+hand. The mapped bulk context lands within a few percent of it, and which of the
+two is ahead changes between runs.
+
+**A single `DataTable` copy is faster.** Copying a hundred thousand rows, the
+mapped context took 1.30x longer on the wide shape and 1.62x longer on the narrow
+one. Building a `DataTable` is cheaper per row than pulling values through a
+reader, and `SqlBulkCopy` does not take the same path for the two sources.
+
+The trade, then: a copy in isolation costs more time, and more rows fit at once.
+Small occasional copies do not need this package for throughput. Large or
+concurrent ones are bounded by the ceiling rather than by the clock.
 
 ## License
 
