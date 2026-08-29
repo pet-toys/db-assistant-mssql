@@ -96,7 +96,16 @@ public abstract class CopyBenchmark<TRow> : BulkCopyHarness<TRow>
 
     private DataTable BuildDataTable(IReadOnlyList<TRow> rows)
     {
-        var table = new DataTable { Locale = CultureInfo.InvariantCulture };
+        // Presized rather than left to grow. DataRowCollection doubles from a small initial
+        // capacity, so an unsized table charges the baseline for its own regrowth on top of the
+        // rows it holds, which is a cost of not knowing the count rather than a cost of the
+        // approach. The caller this arm stands for has a materialised collection and therefore
+        // knows the count too, so leaving it unsized would be measuring a handicap nobody has.
+        var table = new DataTable
+        {
+            Locale = CultureInfo.InvariantCulture,
+            MinimumCapacity = rows.Count,
+        };
 
         foreach (var column in Columns)
         {
