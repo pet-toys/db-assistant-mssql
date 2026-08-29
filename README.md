@@ -55,8 +55,9 @@ wrong. This library closes that gap:
   copy timeout through `SqlBulkOptions`; the call returns the number of rows
   copied.
 - **Broad type support**: `bool`, `char`, `string`, `byte`, `short`, `int`,
-  `long`, `float`, `double`, `decimal`, `DateTime`, `Guid`, `byte[]`, and
-  `char[]`.
+  `long`, `float`, `double`, `decimal`, `Guid`, `byte[]`, `char[]`, and the
+  date and time family in full: `DateTime`, `DateTimeOffset`, `TimeSpan`,
+  `DateOnly`, and `TimeOnly`.
 - **Multi-targets** `net8.0`, `net9.0`, and `net10.0`.
 
 ## Installation
