@@ -37,9 +37,11 @@ When reporting, please include as much of the following as you can:
 ## Scope
 
 This library maps entity properties to columns and streams the values into SQL
-Server through `SqlBulkCopy`. It does not open connections, manage credentials,
-or build ad-hoc SQL text on your behalf — the caller supplies an already
-configured `SqlConnection` and the destination table name. Reports about how the
+Server through `SqlBulkCopy`. It does not create connections, manage credentials,
+or build ad-hoc SQL text on your behalf: the caller supplies an already
+configured `SqlConnection` and the destination table name. It does open that
+connection if it is closed, and closes it again afterwards, but it neither
+constructs it nor sees what it was constructed from. Reports about how the
 mapping or the generated bulk-copy column bindings could mishandle data, or how a
 caller-supplied table or column name could be used unsafely, are in scope. Issues
 caused solely by how a consuming application builds its connection strings,

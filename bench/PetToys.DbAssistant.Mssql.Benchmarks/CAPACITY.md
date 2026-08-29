@@ -1,13 +1,13 @@
 # Capacity
 
-How many rows fit, rather than how fast they copy. Recorded by the capacity
-probe; see [README.md](README.md) for what it does and why it is not a
-benchmark.
+How many rows fit in one copy, and how many copies fit at once, rather than how
+fast either goes. Recorded by the capacity probe; see [README.md](README.md) for
+what it does and why it is not a benchmark.
 
-**Only the ratio travels.** The absolute row counts belong to this machine, this
-ceiling, this GC mode and this runtime, and they move with fragmentation. What
-carries elsewhere is the factor between the two mechanisms, and the rule at the
-bottom of this file carries further than either.
+**Only the ratio travels.** The absolute row counts and copy counts belong to
+this machine, this ceiling, this GC mode and this runtime, and they move with
+fragmentation. What carries elsewhere is the factor between the two mechanisms,
+and the rule at the bottom of this file carries further than either.
 
 ## Environment
 
@@ -103,8 +103,8 @@ client's memory does, and a deadlock exits non-zero, which the probe reads as
 
 ## The rule behind the numbers
 
-The four rows are not four measurements. They are one relationship measured at
-four points:
+The four rows of the single-copy table are not four measurements. They are one
+relationship measured at four points:
 
 ```
 ratio  ~=  1 + (90 + 24 x value-typed columns) / bytes per row of your own entity

@@ -251,6 +251,13 @@ await transaction.CommitAsync(cancellationToken);
 - **Unsupported property types fail fast.** Mapping a property whose type is not
   in the supported list throws an `InvalidOperationException` when the mapping is
   built, not midway through the copy.
+- **The destination column's type is yours to get right.** The library does not
+  know it and does not check it: a supported property type is written as it
+  stands, and a column that cannot hold it is reported by the server when the
+  copy runs. `TimeSpan` is the one worth naming, because SQL Server's `time` is a
+  time of day, bounded to under 24 hours and never negative, while a `TimeSpan`
+  is a duration and can be either. `TimeOnly` states the narrower meaning at the
+  call site; a real duration belongs in a numeric column.
 - **Load into a staging table for the best throughput.** Bulk-copy into a
   heap-style temporary or staging table with no indexes or keys, then insert
   from there into the indexed target table. This keeps the copy itself as cheap
