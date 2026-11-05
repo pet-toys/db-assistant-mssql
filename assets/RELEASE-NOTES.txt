@@ -1,3 +1,18 @@
+10.3.1
+======
+
+Security:
+- System.Security.Cryptography.Pkcs now comes in as a direct dependency with
+  a floor past CVE-2026-84008 and CVE-2026-70162: 8.0.2 on net8.0, 9.0.21 on
+  net9.0 and 10.0.13 on net10.0, each held below the next major. The package
+  reaches this library only through Microsoft.Data.SqlClient, and every
+  SqlClient 7.x asks for a version both advisories are written against, so
+  there is no SqlClient to move to and the floor is the only way the patched
+  version reaches a project that installs this one. Nothing in the API
+  changes, and a project that already resolves a higher version keeps it.
+
+----------------------------------------------------------------------
+
 10.3.0
 ======
 
