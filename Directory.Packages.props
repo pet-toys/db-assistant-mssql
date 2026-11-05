@@ -1,15 +1,29 @@
 <Project>
   <PropertyGroup>
+    <!-- System.Security.Cryptography.Pkcs below is nobody's direct reference; pinning it
+         centrally is the only way to raise a transitive package. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <PropertyGroup>
     <FrameworkVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.0,9.0.0)</FrameworkVersion>
     <FrameworkVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.0,10.0.0)</FrameworkVersion>
     <FrameworkVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.0,11.0.0)</FrameworkVersion>
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.5,11.0.0)</FrameworkExtVersion>
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.0,11.0.0)</FrameworkExtVersion>
     <FrameworkExtVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.0,11.0.0)</FrameworkExtVersion>
+    <!-- Every Microsoft.Data.SqlClient 7.x asks net8.0 for System.Security.Cryptography.Pkcs
+         8.0.1 and net9.0 for 9.0.13 (9.0.18 from 7.1.0 on), and net10.0 reads the net9.0
+         group. CVE-2026-84008 and CVE-2026-70162 are written against all of those, so no
+         SqlClient version restores clean and no line can go unpinned. Each floor below is
+         the first patched version in its own line. -->
+    <PkcsVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.2,9.0.0)</PkcsVersion>
+    <PkcsVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.21,10.0.0)</PkcsVersion>
+    <PkcsVersion Condition="'$(TargetFramework)' == 'net10.0'">[10.0.13,11.0.0)</PkcsVersion>
     <RoslynatorVersion>[5.0.0,)</RoslynatorVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="[7.0.2,)" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(PkcsVersion)" />
   </ItemGroup>
   <ItemGroup>
     <GlobalPackageReference Include="Roslynator.Analyzers" Version="$(RoslynatorVersion)" />
