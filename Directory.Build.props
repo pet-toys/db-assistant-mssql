@@ -45,13 +45,4 @@
     <PublicKeyToken>16532cd584ecbafb</PublicKeyToken>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'!='Debug'">
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <Optimize>True</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-  </PropertyGroup>
-
 </Project>
